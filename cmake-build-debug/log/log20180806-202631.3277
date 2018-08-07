@@ -1,0 +1,12 @@
+Log file created at: 2018/08/06 20:26:31
+Running on machine: xhb-Zest
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I0806 20:26:31.757179  3277 utils.cpp:40] 调试日志（许鸿斌）
+I0806 20:26:31.761709  3277 main.cpp:33] 读入图片:4.548ms
+I0806 20:26:31.763074  3277 main.cpp:53] 高斯滤波:1.492ms
+I0806 20:26:31.763342  3277 main.cpp:67] 设置相机参数:0.26ms
+I0806 20:26:32.854951  3277 main.cpp:75] 图像校正:1091.53ms
+I0806 20:26:32.859479  3277 main.cpp:87] 手指边缘提取4.501ms
+I0806 20:26:32.863471  3277 main.cpp:101] 灰度归一化3.983ms
+I0806 20:26:32.874554  3277 main.cpp:113] 手指三维重建11.067ms
+I0806 20:26:34.631990  3277 main.cpp:132] 纹理映射1757.23ms

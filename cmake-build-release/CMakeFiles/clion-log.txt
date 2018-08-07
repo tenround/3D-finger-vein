@@ -1,0 +1,11 @@
+/home/xhb/xhb/Packages/clion-2018.2/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Release -G "CodeBlocks - Unix Makefiles" /home/xhb/xhb/C++/CLionProjects/3D_finger_vein_v3
+=========OpenCV library status:=========
+   version:3.3.0
+   libraries:opencv_calib3d;opencv_core;opencv_dnn;opencv_features2d;opencv_flann;opencv_highgui;opencv_imgcodecs;opencv_imgproc;opencv_ml;opencv_objdetect;opencv_photo;opencv_shape;opencv_stitching;opencv_superres;opencv_video;opencv_videoio;opencv_videostab;opencv_viz
+   include path:/usr/local/include;/usr/local/include/opencv
+=========PythonLibs library status:=========
+   directories:/usr/include/python2.7
+   libraries:/usr/lib/x86_64-linux-gnu/libpython2.7.so
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/xhb/xhb/C++/CLionProjects/3D_finger_vein_v3/cmake-build-release

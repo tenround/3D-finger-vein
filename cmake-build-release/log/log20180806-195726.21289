@@ -1,0 +1,4 @@
+Log file created at: 2018/08/06 19:57:26
+Running on machine: xhb-Zest
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I0806 19:57:26.757839 21289 utils.cpp:40] 调试日志（许鸿斌）

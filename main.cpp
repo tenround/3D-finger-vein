@@ -20,8 +20,8 @@ void main_reconstruct()
 //    test_interp();
     bool en_show = true;
     string dataset_path = "/home/xhb/xhb/DataSet/data/session1/src/";
-    int sub = 5;
-    int t = 2;
+    int sub = 203;
+    int t = 13;
     string img_name = gen_img_name(sub, t);
     //cout << img_name << endl;
     clock_t start, finish;
@@ -87,7 +87,7 @@ void main_reconstruct()
     LOG(INFO) << "手指边缘提取" << (double)(finish - start) / CLOCKS_PER_SEC * 1000 << "ms";
 
     // 显示提取到的手指边缘
-//    disp_detected_edges(u_b_y, img_1, img_2, img_3);
+//    disp_detected_edges(edge_arr, img_1, img_2, img_3);
 
 //    cv::waitKey();
 
@@ -112,6 +112,8 @@ void main_reconstruct()
     finish = clock();
     LOG(INFO) << "手指三维重建" << (double)(finish - start) / CLOCKS_PER_SEC * 1000 << "ms";
 
+//    vector<vector<double>> temp_X_arr = fc.X_arr;
+
     // 绘制三维手指模型
 //    start = clock();
 //    fc.convert_3d_coor(50);
@@ -127,7 +129,11 @@ void main_reconstruct()
     P_list[0] = fc.P1;
     P_list[1] = fc.P2;
     P_list[2] = fc.P3;
-    map_texture::map_texture(fc.X_arr, fc.z_arr, img_list, edge_arr, P_list);
+    vector<cv::Mat> img_list_src(3);
+    img_list_src[0] = img_1;
+    img_list_src[1] = img_2;
+    img_list_src[2] = img_3;
+    map_texture::map_texture(fc.X_arr, fc.z_arr, img_list_src, edge_arr, P_list);
     finish = clock();
     LOG(INFO) << "纹理映射" << (double)(finish - start) / CLOCKS_PER_SEC * 1000 << "ms";
 

@@ -70,10 +70,6 @@ stdio.h
 opencv2/opencv.hpp
 -
 
-/home/xhb/xhb/C++/CLionProjects/3D_finger_vein_v3/reconstruction/coor_plot.cpp
-coor_plot.h
-/home/xhb/xhb/C++/CLionProjects/3D_finger_vein_v3/reconstruction/coor_plot.h
-
 /home/xhb/xhb/C++/CLionProjects/3D_finger_vein_v3/reconstruction/coor_plot.h
 iostream
 -

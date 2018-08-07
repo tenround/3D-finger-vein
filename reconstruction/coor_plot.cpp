@@ -98,6 +98,8 @@ void coor_plot::plot_ellipse(vector<double> x)
     }
     // plot the ellipse, color is selected automatically
     plt::plot(ellipse_x_list, ellipse_y_list);
+
+
 }
 
 void coor_plot::save(string filename)
@@ -115,8 +117,8 @@ namespace coor_plot_3d {
     GLint SCREEN_WIDTH = 0;
     GLint SCREEN_HEIGHT = 0;
     // 设置程序的窗口大小
-    GLint windowWidth = 600;
-    GLint windowHeight = 400;
+    GLint windowWidth = 800;
+    GLint windowHeight = 600;
 
     // 受支持的点大小范围
     GLfloat sizes[2];
@@ -133,7 +135,9 @@ namespace coor_plot_3d {
     // 绕x轴旋转角度
     GLfloat xRotAngle;
     // 绕y轴旋转角度
-    GLfloat yRotAngle;
+    GLfloat zRotAngle;
+    // 缩放程度
+    GLfloat times=1;
 
     // 待绘制点云的XYZ坐标
     vector<vector<double>> X_3D;
@@ -162,12 +166,14 @@ void coor_plot_3d::render_screen()
     glPushMatrix();
 
     // 键盘控制，鼠标控制
+    // 缩放
+    glScalef(times, times, times);
     // 平移一定距离
     glTranslated(0, 0, cameraDistance);
     // 坐标系绕x轴旋转xRotAngle
     glRotatef(xRotAngle, 1.0f, 0.0f, 0.0f);
-    // 坐标系绕y轴旋转yRotAngle
-    glRotatef(yRotAngle, 0.0f, 1.0f, 0.0f);
+    // 坐标系绕y轴旋转zRotAngle
+    glRotatef(zRotAngle, 0.0f, 0.0f, 1.0f);
 
     // 当前点的大小，默认设为最小
     curSize = 3;
@@ -207,10 +213,10 @@ void coor_plot_3d::render_screen()
 //设置Rendering State
 void coor_plot_3d::setupRenderingState()
 {
-    // 设置背景颜色为黑色
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    // 设置背景颜色为白色
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     // 点的颜色为黄色
-    glColor3f(1.0f, 1.0f, 0.0f);
+    glColor3f(1.0f, 1.0f, 1.0f);
     // 获取所支持的点的大小的取值范围
     glGetFloatv(GL_POINT_SIZE_RANGE, sizes);
     // 获取所支持的点的大小增量
@@ -260,11 +266,11 @@ void coor_plot_3d::keyFunc(int key, int x, int y)
     }
     else if(key == GLUT_KEY_LEFT)
     {
-        yRotAngle -= 5.0f;
+        zRotAngle -= 5.0f;
     }
     else if(key == GLUT_KEY_RIGHT)
     {
-        yRotAngle += 5.0f;
+        zRotAngle += 5.0f;
     }
     else if(key == GLUT_KEY_F1)
     {
@@ -309,7 +315,7 @@ void coor_plot_3d::mouseMotion(int x, int y)
 {
     if(mouseLeftDown)
     {
-        yRotAngle += (x - mouseX);
+        zRotAngle += (x - mouseX);
         xRotAngle += (y - mouseY);
         mouseX = x;
         mouseY = y;
@@ -317,7 +323,8 @@ void coor_plot_3d::mouseMotion(int x, int y)
 
     if(mouseRightDown)
     {
-        cameraDistance += (y - mouseY) * 0.2f;
+//        cameraDistance += (y - mouseY) * 0.2f;
+        times += (y - mouseY) * 0.008f;
         mouseY = y;
     }
 
@@ -330,7 +337,7 @@ void coor_plot_3d::plot_3d_model(vector<vector<double>> X, vector<vector<double>
     set_point_cloud(X, Y, Z);
 
     xRotAngle = 0.0f;
-    yRotAngle = 0.0f;
+    zRotAngle = 0.0f;
 
 //    glutInit(&argc, argv);
     // 使用双缓冲区模式
@@ -370,12 +377,17 @@ void coor_plot_3d::render_screen_finger_vein()
     glPushMatrix();
 
     // 键盘控制，鼠标控制
+    // 缩放
+    glScalef(times, times, times);
     // 平移一定距离
     glTranslated(0, 0, cameraDistance);
+//    cout << "cameraDistance:" << cameraDistance << endl;
     // 坐标系绕x轴旋转xRotAngle
     glRotatef(xRotAngle, 1.0f, 0.0f, 0.0f);
-    // 坐标系绕y轴旋转yRotAngle
-    glRotatef(yRotAngle, 0.0f, 1.0f, 0.0f);
+//    cout << "xRotAngle: " << xRotAngle << endl;
+    // 坐标系绕y轴旋转zRotAngle
+    glRotatef(zRotAngle, 0.0f, 0.0f, 1.0f);
+//    cout << "zRotAngle: " << zRotAngle << endl;
 
     // 当前点的大小，默认设为最小
     curSize = 3;
@@ -431,7 +443,7 @@ void coor_plot_3d::plot_3d_finger_vein_model(vector<vector<double>> X, vector<ve
     set_finger_vein_point_cloud(X, Y, Z, texture);
 
     xRotAngle = 0.0f;
-    yRotAngle = 0.0f;
+    zRotAngle = 0.0f;
 
 //    glutInit(&argc, argv);
     // 使用双缓冲区模式

@@ -65,7 +65,7 @@ void map_texture::map_texture(vector<vector<double>> X_arr, vector<double> z_arr
         double b = b_arr[i];
         double c = c_arr[i];
         double d = d_arr[i];
-        double e = d_arr[i];
+        double e = e_arr[i];
         double f = f_arr[i];
 
         // 6组切点坐标
@@ -169,6 +169,13 @@ void map_texture::map_texture(vector<vector<double>> X_arr, vector<double> z_arr
         p_contact_5 << x5, y5, 1;
         p_contact_6 << x6, y6, 1;
 
+//        cout << "p_contact_1: " << p_contact_1 << endl;
+//        cout << "p_contact_2: " << p_contact_2 << endl;
+//        cout << "p_contact_3: " << p_contact_3 << endl;
+//        cout << "p_contact_4: " << p_contact_4 << endl;
+//        cout << "p_contact_5: " << p_contact_5 << endl;
+//        cout << "p_contact_6: " << p_contact_6 << endl;
+
         Vector3f norm_p_contact_1, norm_p_contact_2, norm_p_contact_3, norm_p_contact_4, norm_p_contact_5, norm_p_contact_6;
         norm_p_contact_1 = inv_T * p_contact_1;
         norm_p_contact_2 = inv_T * p_contact_2;
@@ -220,6 +227,7 @@ void map_texture::map_texture(vector<vector<double>> X_arr, vector<double> z_arr
             texture_img.at<uchar>(j, i) = ellipse_texture[j];
         }
 
+//        double x_sum=0, y_sum=0;
         double x_normal, y_normal;
         vector<double> real_x_list;
         vector<double> real_y_list;
@@ -240,7 +248,13 @@ void map_texture::map_texture(vector<vector<double>> X_arr, vector<double> z_arr
             real_x_list.push_back(real_x);
             real_y_list.push_back(real_y);
             real_z_list.push_back(z_arr[i]);
+
+//            x_sum += x_normal;
+//            y_sum += y_normal;
         }
+//        x_sum = x_sum / real_x_list.size();
+//        y_sum = y_sum / real_y_list.size();
+
 
         x_3D.push_back(real_x_list);
         y_3D.push_back(real_y_list);
@@ -278,6 +292,13 @@ int map_texture::compute_edge_index(double rx, double ry, Vector3f norm_p_contac
 vector<uchar> map_texture::one_ellipse_texture(vector<int> edge_idx_list, vector<cv::Mat> img_list, vector<vector<int>> edge_arr, double step,
         double rx, double ry, Matrix3f T, double z_arr, vector<MatrixXf> P_list)
 {
+    bool debug_1 = false;
+    bool debug_2 = false;
+    bool debug_3 = false;
+    bool debug_1_2 = false;
+    bool debug_2_3 = false;
+    bool debug_1_3 = false;
+
     int edge_idx_1_1 = edge_idx_list[0];      // edge_idx{1, 1}
     int edge_idx_1_2 = edge_idx_list[1];      // edge_idx{1, 2}
     int edge_idx_2_1 = edge_idx_list[2];      // edge_idx{2, 1}
@@ -289,6 +310,11 @@ vector<uchar> map_texture::one_ellipse_texture(vector<int> edge_idx_list, vector
     MatrixXf P1 = P_list[0];
     MatrixXf P2 = P_list[1];
     MatrixXf P3 = P_list[2];
+
+//    cout << "P1: " << P1 << endl;
+//    cout << "P2: " << P2 << endl;
+//    cout << "P3: " << P3 << endl;
+
 
     cv::Mat img_1 = img_list[0];
     cv::Mat img_2 = img_list[1];
@@ -311,91 +337,88 @@ vector<uchar> map_texture::one_ellipse_texture(vector<int> edge_idx_list, vector
     int reflect_x, reflect_y;
     vector<int> reflect_x_list, reflect_y_list;
     double t;
-    if(edge_idx_2_2 > edge_idx_3_1)
-    {
-        for(int i=edge_idx_2_2; i>=edge_idx_3_1; i--) {
-            t = i * step;
-            t_list.push_back(t);
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
+    if(!debug_1) {
+        if (edge_idx_2_2 > edge_idx_3_1) {
+            for (int i = edge_idx_2_2; i >= edge_idx_3_1; i--) {
+                t = i * step;
+                t_list.push_back(t);
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
 
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
-            // P1 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P1 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_x_list.push_back(reflect_x);
-            reflect_y_list.push_back(reflect_y);
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+                // P1 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P1 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+//                cout << "reflect_x: " << reflect_x << endl;
+//                cout << "reflect_y: " << reflect_y << endl;
+                reflect_x_list.push_back(reflect_x);
+                reflect_y_list.push_back(reflect_y);
+            }
+        } else {
+            for (int i = edge_idx_2_2; i >= 1; i--) {
+                t = i * step;
+                t_list.push_back(t);
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
+
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+                // P1 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P1 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_x_list.push_back(reflect_x);
+                reflect_y_list.push_back(reflect_y);
+            }
+            for (int i = n_ellipse; i >= edge_idx_3_1; i--) {
+                t = i * step;
+                t_list.push_back(t);
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
+
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+                // P1 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P1 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_x_list.push_back(reflect_x);
+                reflect_y_list.push_back(reflect_y);
+            }
+
         }
-    }
-    else
-    {
-        for(int i=edge_idx_2_2; i>=1; i--)
-        {
-            t = i * step;
-            t_list.push_back(t);
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
+        int n_pixels = t_list.size();
 
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
-            // P1 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P1 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_x_list.push_back(reflect_x);
-            reflect_y_list.push_back(reflect_y);
-        }
-        for(int i=n_ellipse; i>=edge_idx_3_1; i--)
-        {
-            t = i * step;
-            t_list.push_back(t);
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
-
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
-            // P1 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P1 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_x_list.push_back(reflect_x);
-            reflect_y_list.push_back(reflect_y);
-        }
-
-    }
-    int n_pixels = t_list.size();
-
-    for(int pt=0; pt<n_pixels; pt++)
-    {
+        for (int pt = 0; pt < n_pixels; pt++) {
 //        idx = rem(edge_idx{3,1} + pt, pts_ellipse) + 1;
-        int idx = (edge_idx_3_1 + pt) % n_ellipse;
+            int idx = (edge_idx_3_1 + pt) % n_ellipse;
 //        vein_texture1(idx) = uint8( img_1(reflect_img_x(n_pixs - pt), reflect_img_y(n_pixs - pt)) );
-        uchar img_pixel = img_1.at<uchar>(reflect_x_list[n_pixels - pt - 1], reflect_y_list[n_pixels - pt - 1]);
-        int row = reflect_x_list[n_pixels - pt - 1];
-        int col = reflect_y_list[n_pixels - pt - 1];
-        vein_texture_1[idx] = img_1.at<uchar>(reflect_x_list[n_pixels - pt - 1], reflect_y_list[n_pixels - pt - 1]);
+            uchar img_pixel = img_1.at<uchar>(reflect_x_list[n_pixels - pt - 1], reflect_y_list[n_pixels - pt - 1]);
+            int row = reflect_x_list[n_pixels - pt - 1];
+            int col = reflect_y_list[n_pixels - pt - 1];
+            vein_texture_1[idx] = img_1.at<uchar>(reflect_x_list[n_pixels - pt - 1], reflect_y_list[n_pixels - pt - 1]);
+        }
     }
-
 
 
     // -----------2号摄像头-----------
@@ -403,86 +426,83 @@ vector<uchar> map_texture::one_ellipse_texture(vector<int> edge_idx_list, vector
     t_list.clear();
     reflect_x_list.clear();
     reflect_y_list.clear();
-    if(edge_idx_3_2 > edge_idx_1_1)
-    {
-        for(int i=edge_idx_3_2; i>=edge_idx_1_1; i--) {
-            t = i * step;
-            t_list.push_back(t);
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
+    if(!debug_2) {
+        if (edge_idx_3_2 > edge_idx_1_1) {
+            for (int i = edge_idx_3_2; i >= edge_idx_1_1; i--) {
+                t = i * step;
+                t_list.push_back(t);
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
 
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
-            // P2 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P2 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_x_list.push_back(reflect_x);
-            reflect_y_list.push_back(reflect_y);
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+                // P2 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P2 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_x_list.push_back(reflect_x);
+                reflect_y_list.push_back(reflect_y);
+            }
+        } else {
+            for (int i = edge_idx_3_2; i >= 1; i--) {
+                t = i * step;
+                t_list.push_back(t);
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
+
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+                // P2 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P2 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_x_list.push_back(reflect_x);
+                reflect_y_list.push_back(reflect_y);
+            }
+            for (int i = n_ellipse; i >= edge_idx_1_1; i--) {
+                t = i * step;
+                t_list.push_back(t);
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
+
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+                // P2 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P2 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_x_list.push_back(reflect_x);
+                reflect_y_list.push_back(reflect_y);
+            }
+
         }
-    }
-    else
-    {
-        for(int i=edge_idx_3_2; i>=1; i--)
-        {
-            t = i * step;
-            t_list.push_back(t);
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
+        int n_pixels = t_list.size();
 
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
-            // P2 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P2 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_x_list.push_back(reflect_x);
-            reflect_y_list.push_back(reflect_y);
-        }
-        for(int i=n_ellipse; i>=edge_idx_1_1; i--)
-        {
-            t = i * step;
-            t_list.push_back(t);
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
-
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
-            // P2 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P2 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_x_list.push_back(reflect_x);
-            reflect_y_list.push_back(reflect_y);
-        }
-
-    }
-    n_pixels = t_list.size();
-
-    for(int pt=0; pt<n_pixels; pt++)
-    {
+        for (int pt = 0; pt < n_pixels; pt++) {
 //        idx = rem(edge_idx{1,1} + pt, pts_ellipse) + 1;
-        int idx = (edge_idx_1_1 + pt) % n_ellipse;
+            int idx = (edge_idx_1_1 + pt) % n_ellipse;
 //        vein_texture2(idx) = uint8( img_2(reflect_img_x(n_pixs - pt), reflect_img_y(n_pixs - pt)) );
-        vein_texture_2[idx] = img_2.at<uchar>(reflect_x_list[n_pixels - pt - 1], reflect_y_list[n_pixels - pt - 1]);
+            int pixel = img_2.at<uchar>(reflect_x_list[n_pixels - pt - 1], reflect_y_list[n_pixels - pt - 1]);
+            vein_texture_2[idx] = pixel;
+        }
     }
 
 
@@ -491,86 +511,82 @@ vector<uchar> map_texture::one_ellipse_texture(vector<int> edge_idx_list, vector
     t_list.clear();
     reflect_x_list.clear();
     reflect_y_list.clear();
-    if(edge_idx_1_2 > edge_idx_2_1)
-    {
-        for(int i=edge_idx_1_2; i>=edge_idx_2_1; i--) {
-            t = i * step;
-            t_list.push_back(t);
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
+    if(!debug_3) {
+        if (edge_idx_1_2 > edge_idx_2_1) {
+            for (int i = edge_idx_1_2; i >= edge_idx_2_1; i--) {
+                t = i * step;
+                t_list.push_back(t);
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
 
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
-            // P3 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P3 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_x_list.push_back(reflect_x);
-            reflect_y_list.push_back(reflect_y);
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+                // P3 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P3 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_x_list.push_back(reflect_x);
+                reflect_y_list.push_back(reflect_y);
+            }
+        } else {
+            for (int i = edge_idx_1_2; i >= 1; i--) {
+                t = i * step;
+                t_list.push_back(t);
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
+
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+                // P3 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P3 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_x_list.push_back(reflect_x);
+                reflect_y_list.push_back(reflect_y);
+            }
+            for (int i = n_ellipse; i >= edge_idx_2_1; i--) {
+                t = i * step;
+                t_list.push_back(t);
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
+
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+                // P3 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P3 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_x_list.push_back(reflect_x);
+                reflect_y_list.push_back(reflect_y);
+            }
+
         }
-    }
-    else
-    {
-        for(int i=edge_idx_1_2; i>=1; i--)
-        {
-            t = i * step;
-            t_list.push_back(t);
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
+        int n_pixels = t_list.size();
 
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
-            // P3 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P3 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_x_list.push_back(reflect_x);
-            reflect_y_list.push_back(reflect_y);
-        }
-        for(int i=n_ellipse; i>=edge_idx_2_1; i--)
-        {
-            t = i * step;
-            t_list.push_back(t);
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
-
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
-            // P3 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P3 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_x_list.push_back(reflect_x);
-            reflect_y_list.push_back(reflect_y);
-        }
-
-    }
-    n_pixels = t_list.size();
-
-    for(int pt=0; pt<n_pixels; pt++)
-    {
+        for (int pt = 0; pt < n_pixels; pt++) {
 //        idx = rem(edge_idx{2,1} + pt, pts_ellipse) + 1;
-        int idx = (edge_idx_2_1 + pt) % n_ellipse;
+            int idx = (edge_idx_2_1 + pt) % n_ellipse;
 //        vein_texture3(idx) = uint8( img_3(reflect_img_x(n_pixs - pt), reflect_img_y(n_pixs - pt)) );
-        vein_texture_3[idx] = img_3.at<uchar>(reflect_x_list[n_pixels - pt - 1], reflect_y_list[n_pixels - pt - 1]);
+            vein_texture_3[idx] = img_3.at<uchar>(reflect_x_list[n_pixels - pt - 1], reflect_y_list[n_pixels - pt - 1]);
+        }
     }
 
 
@@ -579,215 +595,209 @@ vector<uchar> map_texture::one_ellipse_texture(vector<int> edge_idx_list, vector
     t_list.clear();
     vector<int> reflect_img1_x, reflect_img1_y;
     vector<int> reflect_img2_x, reflect_img2_y;
-    if(edge_idx_1_1 > edge_idx_2_2)
-    {
-        for(int i=edge_idx_1_1-1; i>=edge_idx_2_2+1; i--) {
-            t = i * step;
-            t_list.push_back(t);
+    if(!debug_1_2) {
+        if (edge_idx_1_1 > edge_idx_2_2) {
+            for (int i = edge_idx_1_1 - 1; i >= edge_idx_2_2 + 1; i--) {
+                t = i * step;
+                t_list.push_back(t);
 
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
 
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
 
-            // 相机1
-            // P1 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P1 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img1_x.push_back(reflect_x);
-            reflect_img1_y.push_back(reflect_y);
+                // 相机1
+                // P1 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P1 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img1_x.push_back(reflect_x);
+                reflect_img1_y.push_back(reflect_y);
 
-            // 相机2
-            // P2 3*4矩阵
-            reflect_x_y = P2 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img2_x.push_back(reflect_x);
-            reflect_img2_y.push_back(reflect_y);
+                // 相机2
+                // P2 3*4矩阵
+                reflect_x_y = P2 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img2_x.push_back(reflect_x);
+                reflect_img2_y.push_back(reflect_y);
+            }
+        } else {
+            for (int i = edge_idx_1_1 - 1; i >= 1; i--) {
+                t = i * step;
+                t_list.push_back(t);
+
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
+
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+
+                // 相机1
+                // P1 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P1 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img1_x.push_back(reflect_x);
+                reflect_img1_y.push_back(reflect_y);
+
+                // 相机2
+                // P2 3*4矩阵
+                reflect_x_y = P2 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img2_x.push_back(reflect_x);
+                reflect_img2_y.push_back(reflect_y);
+            }
+            for (int i = n_ellipse; i >= edge_idx_2_2 + 1; i--) {
+                t = i * step;
+                t_list.push_back(t);
+
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
+
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+
+                // 相机1
+                // P1 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P1 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img1_x.push_back(reflect_x);
+                reflect_img1_y.push_back(reflect_y);
+
+                // 相机2
+                // P2 3*4矩阵
+                reflect_x_y = P2 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img2_x.push_back(reflect_x);
+                reflect_img2_y.push_back(reflect_y);
+            }
+
         }
-    }
-    else
-    {
-        for(int i=edge_idx_1_1-1; i>=1; i--)
-        {
-            t = i * step;
-            t_list.push_back(t);
+        int n_pixels = t_list.size();
+        vector<double> weight2;
+        weight2.clear();
+        vector<double> weight1;
+        weight1.clear();
+        for (int i = 1; i <= n_pixels; i++) {
+            double w2 = (double) 1.0 / n_pixels * i - (double) 1.0 / (2 * n_pixels);
+            double w1 = 1 - w2;
 
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
-
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
-
-            // 相机1
-            // P1 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P1 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img1_x.push_back(reflect_x);
-            reflect_img1_y.push_back(reflect_y);
-
-            // 相机2
-            // P2 3*4矩阵
-            reflect_x_y = P2 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img2_x.push_back(reflect_x);
-            reflect_img2_y.push_back(reflect_y);
-        }
-        for(int i=n_ellipse; i>=edge_idx_2_2+1; i--)
-        {
-            t = i * step;
-            t_list.push_back(t);
-
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
-
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
-
-            // 相机1
-            // P1 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P1 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img1_x.push_back(reflect_x);
-            reflect_img1_y.push_back(reflect_y);
-
-            // 相机2
-            // P2 3*4矩阵
-            reflect_x_y = P2 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img2_x.push_back(reflect_x);
-            reflect_img2_y.push_back(reflect_y);
+            weight2.push_back(w2);
+            weight1.push_back(w1);
         }
 
-    }
-    n_pixels = t_list.size();
-    vector<double> weight2;
-    weight2.clear();
-    vector<double> weight1;
-    weight1.clear();
-    for(int i=1; i<=n_pixels; i++)
-    {
-        double w2 = (double)1.0 / n_pixels * i - (double)1.0 / (2 * n_pixels);
-        double w1 = 1 - w2;
-
-        weight2.push_back(w2);
-        weight1.push_back(w1);
-    }
-
-    for(int pt=0; pt<n_pixels; pt++)
-    {
+        for (int pt = 0; pt < n_pixels; pt++) {
 //        idx = rem((edge_idx{2,2} + 1) + pt, pts_ellipse) + 1;
-        int idx = (edge_idx_2_2 + pt + 1) % n_ellipse;
-        int img1_col = reflect_img1_y[n_pixels - pt - 1] - min_y + 1;
-        int img2_col = reflect_img2_y[n_pixels - pt - 1] - min_y + 1;
-        // 检查两个摄像头下的点有没有超出左右边界，不超则执行if里面程序
-        if(img1_col > 0 && img1_col < u_1.size() && img2_col > 0 && img2_col < b_2.size())
-        {
-            // 检查有没超出上下边界，如果没有，执行if 里面的程序
-            if(u_1[img1_col-1] <= reflect_img1_x[n_pixels - pt-1] && b_2[img2_col-1] >= reflect_img2_x[n_pixels - pt-1])
-            {
+            int idx = (edge_idx_2_2 + pt + 1) % n_ellipse;
+            int img1_col = reflect_img1_y[n_pixels - pt - 1] - min_y + 1;
+            int img2_col = reflect_img2_y[n_pixels - pt - 1] - min_y + 1;
+            // 检查两个摄像头下的点有没有超出左右边界，不超则执行if里面程序
+            if (img1_col > 0 && img1_col < u_1.size() && img2_col > 0 && img2_col < b_2.size()) {
+                // 检查有没超出上下边界，如果没有，执行if 里面的程序
+                if (u_1[img1_col - 1] <= reflect_img1_x[n_pixels - pt - 1] &&
+                    b_2[img2_col - 1] >= reflect_img2_x[n_pixels - pt - 1]) {
 //                vein_texture1_2(idx) = uint8( weight1(pt+1) * img_1(reflect_img1_x(n_pixs - pt), reflect_img1_y(n_pixs - pt)) +
 //                weight2(pt+1) * img_2(reflect_img2_x(n_pixs - pt), reflect_img2_y(n_pixs - pt)))
-                vein_texture_1_2[idx] = (uchar)round(weight1[pt] * img_1.at<uchar>(reflect_img1_x[n_pixels - pt - 1], reflect_img1_y[n_pixels - pt - 1]) +
-                                                     weight2[pt] * img_2.at<uchar>(reflect_img2_x[n_pixels - pt - 1], reflect_img2_y[n_pixels - pt - 1]));
-            }
-            else if(u_1[img1_col-1] > reflect_img1_x[n_pixels - pt-1])
-            {
+                    vein_texture_1_2[idx] = (uchar) round(weight1[pt] *
+                                                          img_1.at<uchar>(reflect_img1_x[n_pixels - pt - 1],
+                                                                          reflect_img1_y[n_pixels - pt - 1]) +
+                                                          weight2[pt] *
+                                                          img_2.at<uchar>(reflect_img2_x[n_pixels - pt - 1],
+                                                                          reflect_img2_y[n_pixels - pt - 1]));
+                } else if (u_1[img1_col - 1] > reflect_img1_x[n_pixels - pt - 1]) {
 //                p_st = [ux_1( img1_col ) + 1, reflect_img1_y(n_pixs - pt) - 1];
-                vector<int> p_st(2);
-                p_st[0] = u_1[img1_col-1] + 1;
-                p_st[1] = reflect_img1_y[n_pixels - pt-1] - 1;
+                    vector<int> p_st(2);
+                    p_st[0] = u_1[img1_col - 1] + 1;
+                    p_st[1] = reflect_img1_y[n_pixels - pt - 1] - 1;
 //                small_patch = img_1(p_st(1) : p_st(1) + 1, p_st(2) : p_st(2) + 1);  % 5*3大小，如果修改，注意后面也要改
 //                        value1 = sum(sum(small_patch)) / 4;
-                vector<uchar> small_patch;
-                small_patch.push_back(img_1.at<uchar>(p_st[0], p_st[1]));
-                small_patch.push_back(img_1.at<uchar>(p_st[0]+1, p_st[1]));
-                small_patch.push_back(img_1.at<uchar>(p_st[0], p_st[1]+1));
-                small_patch.push_back(img_1.at<uchar>(p_st[0]+1, p_st[1]+1));
-                int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
-                int value1 = sum / 4;
+                    vector<uchar> small_patch;
+                    small_patch.push_back(img_1.at<uchar>(p_st[0], p_st[1]));
+                    small_patch.push_back(img_1.at<uchar>(p_st[0] + 1, p_st[1]));
+                    small_patch.push_back(img_1.at<uchar>(p_st[0], p_st[1] + 1));
+                    small_patch.push_back(img_1.at<uchar>(p_st[0] + 1, p_st[1] + 1));
+                    int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
+                    int value1 = sum / 4;
 //                value2 = img_2(reflect_img2_x(n_pixs - pt), reflect_img2_y(n_pixs - pt));
-                int value2 = img_2.at<uchar>(reflect_img2_x[n_pixels - pt-1], reflect_img2_y[n_pixels - pt-1]);
+                    int value2 = img_2.at<uchar>(reflect_img2_x[n_pixels - pt - 1], reflect_img2_y[n_pixels - pt - 1]);
 //                vein_texture1_2(idx) = uint8( weight1(pt+1) * value1 + weight2(pt+1) * value2);
-                vein_texture_1_2[idx] = (uchar)round(weight1[pt] * value1 + weight2[pt] * value2);
-            }
-            else if(b_2[img2_col-1] < reflect_img2_x[n_pixels - pt-1])
-            {
+                    vein_texture_1_2[idx] = (uchar) round(weight1[pt] * value1 + weight2[pt] * value2);
+                } else if (b_2[img2_col - 1] < reflect_img2_x[n_pixels - pt - 1]) {
 //                value1 = img_1(reflect_img1_x(n_pixs - pt), reflect_img1_y(n_pixs - pt));
-                int value1 = img_1.at<uchar>(reflect_img1_x[n_pixels - pt-1], reflect_img1_y[n_pixels - pt-1]);
+                    int value1 = img_1.at<uchar>(reflect_img1_x[n_pixels - pt - 1], reflect_img1_y[n_pixels - pt - 1]);
 //                p_st = [bx_2( img2_col) - 1, reflect_img2_y(n_pixs - pt) - 1];
-                vector<int> p_st(2);
-                p_st[0] = b_2[img2_col-1] - 1;
-                p_st[1] = reflect_img2_y[n_pixels - pt-1] - 1;
+                    vector<int> p_st(2);
+                    p_st[0] = b_2[img2_col - 1] - 1;
+                    p_st[1] = reflect_img2_y[n_pixels - pt - 1] - 1;
 //                small_patch = img_2(p_st(1) - 1 : p_st(1), p_st(2) : p_st(2) + 1);
-                vector<uchar> small_patch;
-                small_patch.push_back(img_2.at<uchar>(p_st[0]-1, p_st[1]));
-                small_patch.push_back(img_2.at<uchar>(p_st[0], p_st[1]));
-                small_patch.push_back(img_2.at<uchar>(p_st[0]-1, p_st[1]+1));
-                small_patch.push_back(img_2.at<uchar>(p_st[0], p_st[1]+1));
+                    vector<uchar> small_patch;
+                    small_patch.push_back(img_2.at<uchar>(p_st[0] - 1, p_st[1]));
+                    small_patch.push_back(img_2.at<uchar>(p_st[0], p_st[1]));
+                    small_patch.push_back(img_2.at<uchar>(p_st[0] - 1, p_st[1] + 1));
+                    small_patch.push_back(img_2.at<uchar>(p_st[0], p_st[1] + 1));
 //                value2 = sum(sum(small_patch)) / 4;
-                int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
-                int value2 = sum / 4;
+                    int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
+                    int value2 = sum / 4;
 //                vein_texture1_2(idx) = uint8( weight1(pt+1) * value1 + weight2(pt+1) * value2);
-                vein_texture_1_2[idx] = (uchar)round(weight1[pt] * value1 + weight2[pt] * value2);
-            } else{  // 两个都超出了怎么处理
+                    vein_texture_1_2[idx] = (uchar) round(weight1[pt] * value1 + weight2[pt] * value2);
+                } else {  // 两个都超出了怎么处理
 //                p_st = [ux_1( img1_col ) + 1, reflect_img1_y(n_pixs - pt) - 1];
-                vector<int> p_st(2);
-                p_st[0] = u_1[img1_col-1] + 1;
-                p_st[1] = reflect_img1_y[n_pixels - pt-1] - 1;
+                    vector<int> p_st(2);
+                    p_st[0] = u_1[img1_col - 1] + 1;
+                    p_st[1] = reflect_img1_y[n_pixels - pt - 1] - 1;
 //                small_patch = img_1(p_st(1) : p_st(1) + 1, p_st(2) : p_st(2) + 1);  % 5*3大小，如果修改，注意后面也要改
 //                        value1 = sum(sum(small_patch)) / 4;
-                vector<uchar> small_patch;
-                small_patch.push_back(img_1.at<uchar>(p_st[0], p_st[1]));
-                small_patch.push_back(img_1.at<uchar>(p_st[0]+1, p_st[1]));
-                small_patch.push_back(img_1.at<uchar>(p_st[0], p_st[1]+1));
-                small_patch.push_back(img_1.at<uchar>(p_st[0]+1, p_st[1]+1));
-                int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
-                int value1 = sum / 4;
+                    vector<uchar> small_patch;
+                    small_patch.push_back(img_1.at<uchar>(p_st[0], p_st[1]));
+                    small_patch.push_back(img_1.at<uchar>(p_st[0] + 1, p_st[1]));
+                    small_patch.push_back(img_1.at<uchar>(p_st[0], p_st[1] + 1));
+                    small_patch.push_back(img_1.at<uchar>(p_st[0] + 1, p_st[1] + 1));
+                    int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
+                    int value1 = sum / 4;
 
 //                p_st = [bx_2( img2_col) - 1, reflect_img2_y(n_pixs - pt) - 1];
-                p_st[0] = b_2[img2_col-1] - 1;
-                p_st[1] = reflect_img2_y[n_pixels - pt-1] - 1;
+                    p_st[0] = b_2[img2_col - 1] - 1;
+                    p_st[1] = reflect_img2_y[n_pixels - pt - 1] - 1;
 //                small_patch = img_2(p_st(1) - 1 : p_st(1), p_st(2) : p_st(2) + 1);
-                small_patch.clear();
-                small_patch.push_back(img_2.at<uchar>(p_st[0]-1, p_st[1]));
-                small_patch.push_back(img_2.at<uchar>(p_st[0], p_st[1]));
-                small_patch.push_back(img_2.at<uchar>(p_st[0]-1, p_st[1]+1));
-                small_patch.push_back(img_2.at<uchar>(p_st[0], p_st[1]+1));
+                    small_patch.clear();
+                    small_patch.push_back(img_2.at<uchar>(p_st[0] - 1, p_st[1]));
+                    small_patch.push_back(img_2.at<uchar>(p_st[0], p_st[1]));
+                    small_patch.push_back(img_2.at<uchar>(p_st[0] - 1, p_st[1] + 1));
+                    small_patch.push_back(img_2.at<uchar>(p_st[0], p_st[1] + 1));
 //                value2 = sum(sum(small_patch)) / 4;
-                sum = accumulate(small_patch.begin(), small_patch.end(), 0);
-                int value2 = sum / 4;
-                vein_texture_1_2[idx] = (uchar)round(weight1[pt] * value1 + weight2[pt] * value2);
-            }
-        } else{
+                    sum = accumulate(small_patch.begin(), small_patch.end(), 0);
+                    int value2 = sum / 4;
+                    vein_texture_1_2[idx] = (uchar) round(weight1[pt] * value1 + weight2[pt] * value2);
+                }
+            } else {
 //            vein_texture1_2(idx) = uint8( weight1(pt+1) * img_1(reflect_img1_x(n_pixs - pt), reflect_img1_y(n_pixs - pt)) + weight2(pt+1) * img_2(reflect_img2_x(n_pixs - pt), reflect_img2_y(n_pixs - pt)));
-            int value1 = img_1.at<uchar>(reflect_img1_x[n_pixels - pt-1], reflect_img1_y[n_pixels - pt-1]);
-            int value2 = img_2.at<uchar>(reflect_img2_x[n_pixels - pt-1], reflect_img2_y[n_pixels - pt-1]);
-            vein_texture_1_2[idx] = (uchar)round(weight1[pt] * value1 + weight2[pt] * value2);
+                int value1 = img_1.at<uchar>(reflect_img1_x[n_pixels - pt - 1], reflect_img1_y[n_pixels - pt - 1]);
+                int value2 = img_2.at<uchar>(reflect_img2_x[n_pixels - pt - 1], reflect_img2_y[n_pixels - pt - 1]);
+                vein_texture_1_2[idx] = (uchar) round(weight1[pt] * value1 + weight2[pt] * value2);
+            }
         }
     }
 
@@ -799,215 +809,212 @@ vector<uchar> map_texture::one_ellipse_texture(vector<int> edge_idx_list, vector
 //    vector<int> reflect_img2_x, reflect_img2_y;
     reflect_img2_x.clear();
     reflect_img2_y.clear();
-    if(edge_idx_2_1 > edge_idx_3_2)
-    {
-        for(int i=edge_idx_2_1-1; i>=edge_idx_3_2+1; i--) {
-            t = i * step;
-            t_list.push_back(t);
+    if(!debug_2_3) {
+        if (edge_idx_2_1 > edge_idx_3_2) {
+            for (int i = edge_idx_2_1 - 1; i >= edge_idx_3_2 + 1; i--) {
+                t = i * step;
+                t_list.push_back(t);
 
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
 
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
 
-            // 相机2
-            // P2 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P2 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img2_x.push_back(reflect_x);
-            reflect_img2_y.push_back(reflect_y);
+                // 相机2
+                // P2 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P2 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img2_x.push_back(reflect_x);
+                reflect_img2_y.push_back(reflect_y);
 
-            // 相机3
-            // P3 3*4矩阵
-            reflect_x_y = P3 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img3_x.push_back(reflect_x);
-            reflect_img3_y.push_back(reflect_y);
+                // 相机3
+                // P3 3*4矩阵
+                reflect_x_y = P3 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img3_x.push_back(reflect_x);
+                reflect_img3_y.push_back(reflect_y);
+            }
+        } else {
+            for (int i = edge_idx_2_1 - 1; i >= 1; i--) {
+                t = i * step;
+                t_list.push_back(t);
+
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
+
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+
+                // 相机2
+                // P2 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P2 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img2_x.push_back(reflect_x);
+                reflect_img2_y.push_back(reflect_y);
+
+                // 相机3
+                // P3 3*4矩阵
+                reflect_x_y = P3 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img3_x.push_back(reflect_x);
+                reflect_img3_y.push_back(reflect_y);
+            }
+            for (int i = n_ellipse; i >= edge_idx_3_2 + 1; i--) {
+                t = i * step;
+                t_list.push_back(t);
+
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
+
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+
+                // 相机2
+                // P2 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P2 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img2_x.push_back(reflect_x);
+                reflect_img2_y.push_back(reflect_y);
+
+                // 相机3
+                // P3 3*4矩阵
+                reflect_x_y = P3 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img3_x.push_back(reflect_x);
+                reflect_img3_y.push_back(reflect_y);
+            }
+
         }
-    }
-    else
-    {
-        for(int i=edge_idx_2_1-1; i>=1; i--)
-        {
-            t = i * step;
-            t_list.push_back(t);
+        int n_pixels = t_list.size();
+        vector<double> weight2;
+        weight2.clear();
+        vector<double> weight3;
+        weight3.clear();
+        for (int i = 1; i <= n_pixels; i++) {
+            double w3 = (double) 1.0 / n_pixels * i - (double) 1.0 / (2 * n_pixels);
+            double w2 = 1 - w3;
 
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
-
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
-
-            // 相机2
-            // P2 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P2 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img2_x.push_back(reflect_x);
-            reflect_img2_y.push_back(reflect_y);
-
-            // 相机3
-            // P3 3*4矩阵
-            reflect_x_y = P3 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img3_x.push_back(reflect_x);
-            reflect_img3_y.push_back(reflect_y);
-        }
-        for(int i=n_ellipse; i>=edge_idx_3_2+1; i--)
-        {
-            t = i * step;
-            t_list.push_back(t);
-
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
-
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
-
-            // 相机2
-            // P2 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P2 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img2_x.push_back(reflect_x);
-            reflect_img2_y.push_back(reflect_y);
-
-            // 相机3
-            // P3 3*4矩阵
-            reflect_x_y = P3 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img3_x.push_back(reflect_x);
-            reflect_img3_y.push_back(reflect_y);
+            weight3.push_back(w3);
+            weight2.push_back(w2);
         }
 
-    }
-    n_pixels = t_list.size();
-//    vector<double> weight2;
-    weight2.clear();
-    vector<double> weight3;
-    weight3.clear();
-    for(int i=1; i<=n_pixels; i++)
-    {
-        double w3 = (double)1.0 / n_pixels * i - (double)1.0 / (2 * n_pixels);
-        double w2 = 1 - w3;
-
-        weight3.push_back(w3);
-        weight2.push_back(w2);
-    }
-
-    for(int pt=0; pt<n_pixels; pt++)
-    {
+        for (int pt = 0; pt < n_pixels; pt++) {
 //        idx = rem(edge_idx{3,2} + 1 + pt, pts_ellipse) + 1;
-        int idx = (edge_idx_3_2 + pt + 1) % n_ellipse;
-        int img2_col = reflect_img2_y[n_pixels - pt - 1] - min_y + 1;
-        int img3_col = reflect_img3_y[n_pixels - pt - 1] - min_y + 1;
-        // 检查两个摄像头下的点有没有超出左右边界，不超则执行if里面程序
-        if(img2_col > 0 && img2_col < u_2.size() && img3_col > 0 && img3_col < b_3.size())
-        {
-            // 检查有没超出上下边界，如果没有，执行if 里面的程序
-            if(u_2[img2_col-1] <= reflect_img2_x[n_pixels - pt-1] && b_3[img3_col-1] >= reflect_img3_x[n_pixels - pt-1])
-            {
+            int idx = (edge_idx_3_2 + pt + 1) % n_ellipse;
+            int img2_col = reflect_img2_y[n_pixels - pt - 1] - min_y + 1;
+            int img3_col = reflect_img3_y[n_pixels - pt - 1] - min_y + 1;
+            // 检查两个摄像头下的点有没有超出左右边界，不超则执行if里面程序
+            if (img2_col > 0 && img2_col < u_2.size() && img3_col > 0 && img3_col < b_3.size()) {
+                // 检查有没超出上下边界，如果没有，执行if 里面的程序
+                if (u_2[img2_col - 1] <= reflect_img2_x[n_pixels - pt - 1] &&
+                    b_3[img3_col - 1] >= reflect_img3_x[n_pixels - pt - 1]) {
 //                vein_texture2_3(idx) = uint8( weight2(pt+1) * img_2(reflect_img2_x(n_pixs - pt), reflect_img2_y(n_pixs - pt)) +
 //                weight3(pt+1) * img_3(reflect_img3_x(n_pixs - pt), reflect_img3_y(n_pixs - pt)));
-                vein_texture_2_3[idx] = (uchar)round(weight2[pt] * img_2.at<uchar>(reflect_img2_x[n_pixels - pt - 1], reflect_img2_y[n_pixels - pt - 1]) +
-                                                     weight3[pt] * img_3.at<uchar>(reflect_img3_x[n_pixels - pt - 1], reflect_img3_y[n_pixels - pt - 1]));
-            }
-            else if(u_2[img2_col-1] > reflect_img2_x[n_pixels - pt-1])
-            {
+                    vein_texture_2_3[idx] = (uchar) round(weight2[pt] *
+                                                          img_2.at<uchar>(reflect_img2_x[n_pixels - pt - 1],
+                                                                          reflect_img2_y[n_pixels - pt - 1]) +
+                                                          weight3[pt] *
+                                                          img_3.at<uchar>(reflect_img3_x[n_pixels - pt - 1],
+                                                                          reflect_img3_y[n_pixels - pt - 1]));
+                } else if (u_2[img2_col - 1] > reflect_img2_x[n_pixels - pt - 1]) {
 //                p_st = [ux_2( img2_col ) + 1, reflect_img2_y(n_pixs - pt) - 1];
-                vector<int> p_st(2);
-                p_st[0] = u_2[img2_col-1] + 1;
-                p_st[1] = reflect_img2_y[n_pixels - pt-1] - 1;
+                    vector<int> p_st(2);
+                    p_st[0] = u_2[img2_col - 1] + 1;
+                    p_st[1] = reflect_img2_y[n_pixels - pt - 1] - 1;
 //                small_patch = img_2(p_st(1) : p_st(1) + 1, p_st(2) : p_st(2) + 1);  % 5*3大小，如果修改，注意后面也要改
 //                        value2 = sum(sum(small_patch)) / 4;
-                vector<uchar> small_patch;
-                small_patch.push_back(img_2.at<uchar>(p_st[0], p_st[1]));
-                small_patch.push_back(img_2.at<uchar>(p_st[0]+1, p_st[1]));
-                small_patch.push_back(img_2.at<uchar>(p_st[0], p_st[1]+1));
-                small_patch.push_back(img_2.at<uchar>(p_st[0]+1, p_st[1]+1));
-                int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
-                int value2 = sum / 4;
+                    vector<uchar> small_patch;
+                    small_patch.push_back(img_2.at<uchar>(p_st[0], p_st[1]));
+                    small_patch.push_back(img_2.at<uchar>(p_st[0] + 1, p_st[1]));
+                    small_patch.push_back(img_2.at<uchar>(p_st[0], p_st[1] + 1));
+                    small_patch.push_back(img_2.at<uchar>(p_st[0] + 1, p_st[1] + 1));
+                    int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
+                    int value2 = sum / 4;
 //                value3 = img_3(reflect_img3_x(n_pixs - pt), reflect_img3_y(n_pixs - pt));
-                int value3 = img_3.at<uchar>(reflect_img3_x[n_pixels - pt-1], reflect_img3_y[n_pixels - pt-1]);
+                    int value3 = img_3.at<uchar>(reflect_img3_x[n_pixels - pt - 1], reflect_img3_y[n_pixels - pt - 1]);
 //                vein_texture2_3(idx) = uint8( weight2(pt+1) * value2 + weight3(pt+1) * value3);
-                vein_texture_2_3[idx] = (uchar)round(weight2[pt] * value2 + weight3[pt] * value3);
-            }
-            else if(b_3[img3_col-1] < reflect_img3_x[n_pixels - pt-1])
-            {
+                    vein_texture_2_3[idx] = (uchar) round(weight2[pt] * value2 + weight3[pt] * value3);
+                } else if (b_3[img3_col - 1] < reflect_img3_x[n_pixels - pt - 1]) {
 //                value2 = img_2(reflect_img2_x(n_pixs - pt), reflect_img2_y(n_pixs - pt));
-                int value2 = img_2.at<uchar>(reflect_img2_x[n_pixels - pt-1], reflect_img2_y[n_pixels - pt-1]);
+                    int value2 = img_2.at<uchar>(reflect_img2_x[n_pixels - pt - 1], reflect_img2_y[n_pixels - pt - 1]);
 //                p_st = [bx_3( img3_col) - 1, reflect_img3_y(n_pixs - pt) - 1];
-                vector<int> p_st(2);
-                p_st[0] = b_3[img3_col-1] - 1;
-                p_st[1] = reflect_img3_y[n_pixels - pt-1] - 1;
+                    vector<int> p_st(2);
+                    p_st[0] = b_3[img3_col - 1] - 1;
+                    p_st[1] = reflect_img3_y[n_pixels - pt - 1] - 1;
 //                small_patch = img_3(p_st(1) - 1 : p_st(1), p_st(2) : p_st(2) + 1);
-                vector<uchar> small_patch;
-                small_patch.push_back(img_3.at<uchar>(p_st[0]-1, p_st[1]));
-                small_patch.push_back(img_3.at<uchar>(p_st[0], p_st[1]));
-                small_patch.push_back(img_3.at<uchar>(p_st[0]-1, p_st[1]+1));
-                small_patch.push_back(img_3.at<uchar>(p_st[0], p_st[1]+1));
+                    vector<uchar> small_patch;
+                    small_patch.push_back(img_3.at<uchar>(p_st[0] - 1, p_st[1]));
+                    small_patch.push_back(img_3.at<uchar>(p_st[0], p_st[1]));
+                    small_patch.push_back(img_3.at<uchar>(p_st[0] - 1, p_st[1] + 1));
+                    small_patch.push_back(img_3.at<uchar>(p_st[0], p_st[1] + 1));
 //                value3 = sum(sum(small_patch)) / 4;
-                int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
-                int value3 = sum / 4;
+                    int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
+                    int value3 = sum / 4;
 //                vein_texture2_3(idx) = uint8( weight2(pt+1) * value2 + weight3(pt+1) * value3);
-                vein_texture_2_3[idx] = (uchar)round(weight2[pt] * value2 + weight3[pt] * value3);
-            } else{  // 两个都超出了怎么处理
+                    vein_texture_2_3[idx] = (uchar) round(weight2[pt] * value2 + weight3[pt] * value3);
+                } else {  // 两个都超出了怎么处理
 //                p_st = [ux_2( img2_col ) + 1, reflect_img2_y(n_pixs - pt) - 1];
-                vector<int> p_st(2);
-                p_st[0] = u_2[img2_col-1] + 1;
-                p_st[1] = reflect_img2_y[n_pixels - pt-1] - 1;
+                    vector<int> p_st(2);
+                    p_st[0] = u_2[img2_col - 1] + 1;
+                    p_st[1] = reflect_img2_y[n_pixels - pt - 1] - 1;
 //                small_patch = img_2(p_st(1) : p_st(1) + 1, p_st(2) : p_st(2) + 1);  % 5*3大小，如果修改，注意后面也要改
 //                        value2 = sum(sum(small_patch)) / 4;
-                vector<uchar> small_patch;
-                small_patch.push_back(img_2.at<uchar>(p_st[0], p_st[1]));
-                small_patch.push_back(img_2.at<uchar>(p_st[0]+1, p_st[1]));
-                small_patch.push_back(img_2.at<uchar>(p_st[0], p_st[1]+1));
-                small_patch.push_back(img_2.at<uchar>(p_st[0]+1, p_st[1]+1));
-                int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
-                int value2 = sum / 4;
+                    vector<uchar> small_patch;
+                    small_patch.push_back(img_2.at<uchar>(p_st[0], p_st[1]));
+                    small_patch.push_back(img_2.at<uchar>(p_st[0] + 1, p_st[1]));
+                    small_patch.push_back(img_2.at<uchar>(p_st[0], p_st[1] + 1));
+                    small_patch.push_back(img_2.at<uchar>(p_st[0] + 1, p_st[1] + 1));
+                    int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
+                    int value2 = sum / 4;
 
 //                p_st = [bx_3( img3_col) - 1, reflect_img3_y(n_pixs - pt) - 1];
-                p_st[0] = b_3[img3_col-1] - 1;
-                p_st[1] = reflect_img3_y[n_pixels - pt-1] - 1;
+                    p_st[0] = b_3[img3_col - 1] - 1;
+                    p_st[1] = reflect_img3_y[n_pixels - pt - 1] - 1;
 //                small_patch = img_3(p_st(1) - 1 : p_st(1), p_st(2) : p_st(2) + 1);
-                small_patch.clear();
-                small_patch.push_back(img_3.at<uchar>(p_st[0]-1, p_st[1]));
-                small_patch.push_back(img_3.at<uchar>(p_st[0], p_st[1]));
-                small_patch.push_back(img_3.at<uchar>(p_st[0]-1, p_st[1]+1));
-                small_patch.push_back(img_3.at<uchar>(p_st[0], p_st[1]+1));
+                    small_patch.clear();
+                    small_patch.push_back(img_3.at<uchar>(p_st[0] - 1, p_st[1]));
+                    small_patch.push_back(img_3.at<uchar>(p_st[0], p_st[1]));
+                    small_patch.push_back(img_3.at<uchar>(p_st[0] - 1, p_st[1] + 1));
+                    small_patch.push_back(img_3.at<uchar>(p_st[0], p_st[1] + 1));
 //                value3 = sum(sum(small_patch)) / 4;
-                sum = accumulate(small_patch.begin(), small_patch.end(), 0);
-                int value3 = sum / 4;
-                vein_texture_2_3[idx] = (uchar)round(weight2[pt] * value2 + weight3[pt] * value3);
-            }
-        } else{
+                    sum = accumulate(small_patch.begin(), small_patch.end(), 0);
+                    int value3 = sum / 4;
+                    vein_texture_2_3[idx] = (uchar) round(weight2[pt] * value2 + weight3[pt] * value3);
+                }
+            } else {
 //            vein_texture2_3(idx) = uint8( weight2(pt+1) * img_2(reflect_img2_x(n_pixs - pt), reflect_img2_y(n_pixs - pt)) + weight3(pt+1) * img_3(reflect_img3_x(n_pixs - pt), reflect_img3_y(n_pixs - pt)));
-            int value2 = img_2.at<uchar>(reflect_img2_x[n_pixels - pt-1], reflect_img2_y[n_pixels - pt-1]);
-            int value3 = img_3.at<uchar>(reflect_img3_x[n_pixels - pt-1], reflect_img3_y[n_pixels - pt-1]);
-            vein_texture_2_3[idx] = (uchar)round(weight2[pt] * value2 + weight3[pt] * value3);
+                int value2 = img_2.at<uchar>(reflect_img2_x[n_pixels - pt - 1], reflect_img2_y[n_pixels - pt - 1]);
+                int value3 = img_3.at<uchar>(reflect_img3_x[n_pixels - pt - 1], reflect_img3_y[n_pixels - pt - 1]);
+//                cout << "reflect_img3_x[n_pixels - pt - 1]: " << reflect_img3_x[n_pixels - pt - 1] << endl;
+//                cout << "reflect_img3_y[n_pixels - pt - 1]: " << reflect_img3_y[n_pixels - pt - 1] << endl;
+//                cout << "pixel: " << (int)img_3.at<uchar>(reflect_img3_x[n_pixels - pt - 1], reflect_img3_y[n_pixels - pt - 1]) << endl;
+                vein_texture_2_3[idx] = (uchar) round(weight2[pt] * value2 + weight3[pt] * value3);
+            }
         }
     }
 
@@ -1022,215 +1029,209 @@ vector<uchar> map_texture::one_ellipse_texture(vector<int> edge_idx_list, vector
     reflect_img1_y.clear();
     reflect_img3_x.clear();
     reflect_img3_y.clear();
-    if(edge_idx_3_1 > edge_idx_1_2)
-    {
-        for(int i=edge_idx_3_1-1; i>=edge_idx_1_2+1; i--) {
-            t = i * step;
-            t_list.push_back(t);
+    if(!debug_1_3) {
+        if (edge_idx_3_1 > edge_idx_1_2) {
+            for (int i = edge_idx_3_1 - 1; i >= edge_idx_1_2 + 1; i--) {
+                t = i * step;
+                t_list.push_back(t);
 
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
 
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
 
-            // 相机1
-            // P1 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P1 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img1_x.push_back(reflect_x);
-            reflect_img1_y.push_back(reflect_y);
+                // 相机1
+                // P1 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P1 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img1_x.push_back(reflect_x);
+                reflect_img1_y.push_back(reflect_y);
 
-            // 相机3
-            // P3 3*4矩阵
-            reflect_x_y = P3 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img3_x.push_back(reflect_x);
-            reflect_img3_y.push_back(reflect_y);
+                // 相机3
+                // P3 3*4矩阵
+                reflect_x_y = P3 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img3_x.push_back(reflect_x);
+                reflect_img3_y.push_back(reflect_y);
+            }
+        } else {
+            for (int i = edge_idx_3_1 - 1; i >= 1; i--) {
+                t = i * step;
+                t_list.push_back(t);
+
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
+
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+
+                // 相机1
+                // P1 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P1 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img1_x.push_back(reflect_x);
+                reflect_img1_y.push_back(reflect_y);
+
+                // 相机3
+                // P3 3*4矩阵
+                reflect_x_y = P3 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img3_x.push_back(reflect_x);
+                reflect_img3_y.push_back(reflect_y);
+            }
+            for (int i = n_ellipse; i >= edge_idx_1_2 + 1; i--) {
+                t = i * step;
+                t_list.push_back(t);
+
+                x_normal = rx * cos(t);
+                y_normal = ry * sin(t);
+
+                // 计算映射到椭圆上的xy坐标索引
+                Vector3f x_y_normal;
+                x_y_normal << x_normal, y_normal, 1;
+                Vector3f coor_real_c;
+                coor_real_c = T * x_y_normal;
+                Vector4f reflect_matrix;
+                reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
+
+                // 相机1
+                // P1 3*4矩阵
+                Vector3f reflect_x_y;
+                reflect_x_y = P1 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img1_x.push_back(reflect_x);
+                reflect_img1_y.push_back(reflect_y);
+
+                // 相机3
+                // P3 3*4矩阵
+                reflect_x_y = P3 * reflect_matrix;
+                reflect_x = (int) round(reflect_x_y(1) / reflect_x_y(2));
+                reflect_y = (int) round(reflect_x_y(0) / reflect_x_y(2));
+                reflect_img3_x.push_back(reflect_x);
+                reflect_img3_y.push_back(reflect_y);
+            }
+
         }
-    }
-    else
-    {
-        for(int i=edge_idx_3_1-1; i>=1; i--)
-        {
-            t = i * step;
-            t_list.push_back(t);
+        int n_pixels = t_list.size();
+        vector<double> weight1;
+        weight1.clear();
+        vector<double> weight3;
+        weight3.clear();
+        for (int i = 1; i <= n_pixels; i++) {
+            double w1 = (double) 1.0 / n_pixels * i - (double) 1.0 / (2 * n_pixels);
+            double w3 = 1 - w1;
 
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
-
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
-
-            // 相机1
-            // P1 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P1 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img1_x.push_back(reflect_x);
-            reflect_img1_y.push_back(reflect_y);
-
-            // 相机3
-            // P3 3*4矩阵
-            reflect_x_y = P3 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img3_x.push_back(reflect_x);
-            reflect_img3_y.push_back(reflect_y);
-        }
-        for(int i=n_ellipse; i>=edge_idx_1_2+1; i--)
-        {
-            t = i * step;
-            t_list.push_back(t);
-
-            x_normal = rx * cos(t);
-            y_normal = ry * sin(t);
-
-            // 计算映射到椭圆上的xy坐标索引
-            Vector3f x_y_normal;
-            x_y_normal << x_normal, y_normal, 1;
-            Vector3f coor_real_c;
-            coor_real_c = T * x_y_normal;
-            Vector4f reflect_matrix;
-            reflect_matrix << coor_real_c(0), coor_real_c(1), z_arr, 1;
-
-            // 相机1
-            // P1 3*4矩阵
-            Vector3f reflect_x_y;
-            reflect_x_y = P1 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img1_x.push_back(reflect_x);
-            reflect_img1_y.push_back(reflect_y);
-
-            // 相机3
-            // P3 3*4矩阵
-            reflect_x_y = P3 * reflect_matrix;
-            reflect_x = (int)round(reflect_x_y(1) / reflect_x_y(2));
-            reflect_y = (int)round(reflect_x_y(0) / reflect_x_y(2));
-            reflect_img3_x.push_back(reflect_x);
-            reflect_img3_y.push_back(reflect_y);
+            weight1.push_back(w1);
+            weight3.push_back(w3);
         }
 
-    }
-    n_pixels = t_list.size();
-//    vector<double> weight1;
-    weight1.clear();
-//    vector<double> weight3;
-    weight3.clear();
-    for(int i=1; i<=n_pixels; i++)
-    {
-        double w1 = (double)1.0 / n_pixels * i - (double)1.0 / (2 * n_pixels);
-        double w3 = 1 - w1;
-
-        weight1.push_back(w1);
-        weight3.push_back(w3);
-    }
-
-    for(int pt=0; pt<n_pixels; pt++)
-    {
+        for (int pt = 0; pt < n_pixels; pt++) {
 //        idx = rem(edge_idx{1,2} + 1 + pt, pts_ellipse) + 1;
-        int idx = (edge_idx_1_2 + pt + 1) % n_ellipse;
-        int img3_col = reflect_img3_y[n_pixels - pt - 1] - min_y + 1;
-        int img1_col = reflect_img1_y[n_pixels - pt - 1] - min_y + 1;
-        // 检查两个摄像头下的点有没有超出左右边界，不超则执行if里面程序
-        if(img3_col > 0 && img3_col < u_3.size() && img1_col > 0 && img1_col < b_1.size())
-        {
-            // 检查有没超出上下边界，如果没有，执行if 里面的程序
-            if(u_3[img3_col-1] <= reflect_img3_x[n_pixels - pt-1] && b_1[img1_col-1] >= reflect_img1_x[n_pixels - pt-1])
-            {
+            int idx = (edge_idx_1_2 + pt + 1) % n_ellipse;
+            int img3_col = reflect_img3_y[n_pixels - pt - 1] - min_y + 1;
+            int img1_col = reflect_img1_y[n_pixels - pt - 1] - min_y + 1;
+            // 检查两个摄像头下的点有没有超出左右边界，不超则执行if里面程序
+            if (img3_col > 0 && img3_col < u_3.size() && img1_col > 0 && img1_col < b_1.size()) {
+                // 检查有没超出上下边界，如果没有，执行if 里面的程序
+                if (u_3[img3_col - 1] <= reflect_img3_x[n_pixels - pt - 1] &&
+                    b_1[img1_col - 1] >= reflect_img1_x[n_pixels - pt - 1]) {
 //                vein_texture1_3(idx) = uint8( weight3(pt+1) * img_3(reflect_img3_x(n_pixs - pt), reflect_img3_y(n_pixs - pt)) +
 //                  weight1(pt+1) * img_1(reflect_img1_x(n_pixs - pt), reflect_img1_y(n_pixs - pt)));
-                vein_texture_1_3[idx] = (uchar)round(weight3[pt] * img_3.at<uchar>(reflect_img3_x[n_pixels - pt - 1], reflect_img3_y[n_pixels - pt - 1]) +
-                                                     weight1[pt] * img_1.at<uchar>(reflect_img1_x[n_pixels - pt - 1], reflect_img1_y[n_pixels - pt - 1]));
-            }
-            else if(u_3[img3_col-1] > reflect_img3_x[n_pixels - pt-1])
-            {
+                    vein_texture_1_3[idx] = (uchar) round(weight3[pt] *
+                                                          img_3.at<uchar>(reflect_img3_x[n_pixels - pt - 1],
+                                                                          reflect_img3_y[n_pixels - pt - 1]) +
+                                                          weight1[pt] *
+                                                          img_1.at<uchar>(reflect_img1_x[n_pixels - pt - 1],
+                                                                          reflect_img1_y[n_pixels - pt - 1]));
+                } else if (u_3[img3_col - 1] > reflect_img3_x[n_pixels - pt - 1]) {
 //                p_st = [ux_3( img3_col ) + 1, reflect_img3_y(n_pixs - pt) - 1];
-                vector<int> p_st(2);
-                p_st[0] = u_3[img3_col-1] + 1;
-                p_st[1] = reflect_img3_y[n_pixels - pt-1] - 1;
+                    vector<int> p_st(2);
+                    p_st[0] = u_3[img3_col - 1] + 1;
+                    p_st[1] = reflect_img3_y[n_pixels - pt - 1] - 1;
 //                small_patch = img_3(p_st(1) : p_st(1) + 1, p_st(2) : p_st(2) + 1);  % 5*3大小，如果修改，注意后面也要改
 //                        value3 = sum(sum(small_patch)) / 4;
-                vector<uchar> small_patch;
-                small_patch.push_back(img_3.at<uchar>(p_st[0], p_st[1]));
-                small_patch.push_back(img_3.at<uchar>(p_st[0]+1, p_st[1]));
-                small_patch.push_back(img_3.at<uchar>(p_st[0], p_st[1]+1));
-                small_patch.push_back(img_3.at<uchar>(p_st[0]+1, p_st[1]+1));
-                int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
-                int value3 = sum / 4;
+                    vector<uchar> small_patch;
+                    small_patch.push_back(img_3.at<uchar>(p_st[0], p_st[1]));
+                    small_patch.push_back(img_3.at<uchar>(p_st[0] + 1, p_st[1]));
+                    small_patch.push_back(img_3.at<uchar>(p_st[0], p_st[1] + 1));
+                    small_patch.push_back(img_3.at<uchar>(p_st[0] + 1, p_st[1] + 1));
+                    int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
+                    int value3 = sum / 4;
 //                value1 = img_1(reflect_img1_x(n_pixs - pt), reflect_img1_y(n_pixs - pt));
-                int value1 = img_1.at<uchar>(reflect_img1_x[n_pixels - pt-1], reflect_img1_y[n_pixels - pt-1]);
+                    int value1 = img_1.at<uchar>(reflect_img1_x[n_pixels - pt - 1], reflect_img1_y[n_pixels - pt - 1]);
 //                vein_texture1_3(idx) = uint8( weight3(pt+1) * value3 + weight1(pt+1) * value1);
-                vein_texture_1_3[idx] = (uchar)round(weight3[pt] * value3 + weight1[pt] * value1);
-            }
-            else if(b_1[img1_col-1] < reflect_img1_x[n_pixels - pt-1])
-            {
+                    vein_texture_1_3[idx] = (uchar) round(weight3[pt] * value3 + weight1[pt] * value1);
+                } else if (b_1[img1_col - 1] < reflect_img1_x[n_pixels - pt - 1]) {
 //                value3 = img_3(reflect_img3_x(n_pixs - pt), reflect_img3_y(n_pixs - pt));
-                int value3 = img_3.at<uchar>(reflect_img3_x[n_pixels - pt-1], reflect_img3_y[n_pixels - pt-1]);
+                    int value3 = img_3.at<uchar>(reflect_img3_x[n_pixels - pt - 1], reflect_img3_y[n_pixels - pt - 1]);
 //                p_st = [bx_1( img1_col) - 1, reflect_img1_y(n_pixs - pt) - 1];
-                vector<int> p_st(2);
-                p_st[0] = b_1[img1_col-1] - 1;
-                p_st[1] = reflect_img1_y[n_pixels - pt-1] - 1;
+                    vector<int> p_st(2);
+                    p_st[0] = b_1[img1_col - 1] - 1;
+                    p_st[1] = reflect_img1_y[n_pixels - pt - 1] - 1;
 //                small_patch = img_1(p_st(1) - 1 : p_st(1), p_st(2) : p_st(2) + 1);
-                vector<uchar> small_patch;
-                small_patch.push_back(img_1.at<uchar>(p_st[0]-1, p_st[1]));
-                small_patch.push_back(img_1.at<uchar>(p_st[0], p_st[1]));
-                small_patch.push_back(img_1.at<uchar>(p_st[0]-1, p_st[1]+1));
-                small_patch.push_back(img_1.at<uchar>(p_st[0], p_st[1]+1));
+                    vector<uchar> small_patch;
+                    small_patch.push_back(img_1.at<uchar>(p_st[0] - 1, p_st[1]));
+                    small_patch.push_back(img_1.at<uchar>(p_st[0], p_st[1]));
+                    small_patch.push_back(img_1.at<uchar>(p_st[0] - 1, p_st[1] + 1));
+                    small_patch.push_back(img_1.at<uchar>(p_st[0], p_st[1] + 1));
 //                value1 = sum(sum(small_patch)) / 4;
-                int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
-                int value1 = sum / 4;
+                    int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
+                    int value1 = sum / 4;
 //                vein_texture1_3(idx) = uint8( weight3(pt+1) * value3 + weight1(pt+1) * value1);
-                vein_texture_1_3[idx] = (uchar)round(weight3[pt] * value3 + weight1[pt] * value1);
-            } else{  // 两个都超出了怎么处理
+                    vein_texture_1_3[idx] = (uchar) round(weight3[pt] * value3 + weight1[pt] * value1);
+                } else {  // 两个都超出了怎么处理
 //                p_st = [ux_3( img3_col ) + 1, reflect_img3_y(n_pixs - pt) - 1];
-                vector<int> p_st(2);
-                p_st[0] = u_3[img3_col-1] + 1;
-                p_st[1] = reflect_img3_y[n_pixels - pt-1] - 1;
+                    vector<int> p_st(2);
+                    p_st[0] = u_3[img3_col - 1] + 1;
+                    p_st[1] = reflect_img3_y[n_pixels - pt - 1] - 1;
 //                small_patch = img_3(p_st(1) : p_st(1) + 1, p_st(2) : p_st(2) + 1);  % 5*3大小，如果修改，注意后面也要改
 //                        value3 = sum(sum(small_patch)) / 4;
-                vector<uchar> small_patch;
-                small_patch.push_back(img_3.at<uchar>(p_st[0], p_st[1]));
-                small_patch.push_back(img_3.at<uchar>(p_st[0]+1, p_st[1]));
-                small_patch.push_back(img_3.at<uchar>(p_st[0], p_st[1]+1));
-                small_patch.push_back(img_3.at<uchar>(p_st[0]+1, p_st[1]+1));
-                int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
-                int value3 = sum / 4;
+                    vector<uchar> small_patch;
+                    small_patch.push_back(img_3.at<uchar>(p_st[0], p_st[1]));
+                    small_patch.push_back(img_3.at<uchar>(p_st[0] + 1, p_st[1]));
+                    small_patch.push_back(img_3.at<uchar>(p_st[0], p_st[1] + 1));
+                    small_patch.push_back(img_3.at<uchar>(p_st[0] + 1, p_st[1] + 1));
+                    int sum = accumulate(small_patch.begin(), small_patch.end(), 0);
+                    int value3 = sum / 4;
 
 //                p_st = [bx_1( img1_col) - 1, reflect_img1_y(n_pixs - pt) - 1];
-                p_st[0] = b_1[img1_col-1] - 1;
-                p_st[1] = reflect_img1_y[n_pixels - pt-1] - 1;
+                    p_st[0] = b_1[img1_col - 1] - 1;
+                    p_st[1] = reflect_img1_y[n_pixels - pt - 1] - 1;
 //                small_patch = img_1(p_st(1) - 1 : p_st(1), p_st(2) : p_st(2) + 1);
-                small_patch.clear();
-                small_patch.push_back(img_1.at<uchar>(p_st[0]-1, p_st[1]));
-                small_patch.push_back(img_1.at<uchar>(p_st[0], p_st[1]));
-                small_patch.push_back(img_1.at<uchar>(p_st[0]-1, p_st[1]+1));
-                small_patch.push_back(img_1.at<uchar>(p_st[0], p_st[1]+1));
+                    small_patch.clear();
+                    small_patch.push_back(img_1.at<uchar>(p_st[0] - 1, p_st[1]));
+                    small_patch.push_back(img_1.at<uchar>(p_st[0], p_st[1]));
+                    small_patch.push_back(img_1.at<uchar>(p_st[0] - 1, p_st[1] + 1));
+                    small_patch.push_back(img_1.at<uchar>(p_st[0], p_st[1] + 1));
 //                value1 = sum(sum(small_patch)) / 4;
-                sum = accumulate(small_patch.begin(), small_patch.end(), 0);
-                int value1 = sum / 4;
-                vein_texture_1_3[idx] = (uchar)round(weight3[pt] * value3 + weight1[pt] * value1);
-            }
-        } else{
+                    sum = accumulate(small_patch.begin(), small_patch.end(), 0);
+                    int value1 = sum / 4;
+                    vein_texture_1_3[idx] = (uchar) round(weight3[pt] * value3 + weight1[pt] * value1);
+                }
+            } else {
 //            vein_texture1_3(idx) = uint8( weight3(pt+1) * img_3(reflect_img3_x(n_pixs - pt), reflect_img3_y(n_pixs - pt)) + weight1(pt+1) * img_1(reflect_img1_x(n_pixs - pt), reflect_img1_y(n_pixs - pt)));
-            int value3 = img_3.at<uchar>(reflect_img3_x[n_pixels - pt-1], reflect_img3_y[n_pixels - pt-1]);
-            int value1 = img_1.at<uchar>(reflect_img1_x[n_pixels - pt-1], reflect_img1_y[n_pixels - pt-1]);
-            vein_texture_2_3[idx] = (uchar)round(weight3[pt] * value3 + weight1[pt] * value1);
+                int value3 = img_3.at<uchar>(reflect_img3_x[n_pixels - pt - 1], reflect_img3_y[n_pixels - pt - 1]);
+                int value1 = img_1.at<uchar>(reflect_img1_x[n_pixels - pt - 1], reflect_img1_y[n_pixels - pt - 1]);
+                vein_texture_2_3[idx] = (uchar) round(weight3[pt] * value3 + weight1[pt] * value1);
+            }
         }
     }
 

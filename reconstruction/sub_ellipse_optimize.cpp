@@ -10,6 +10,8 @@ namespace sub_ellipse_opt{
     double bias1, bias2, bias3, bias4, bias5, bias6;
     double init_center_x, init_center_y, init_radius;
     double b, c;
+
+    double minf_0, minf_1;
 }
 
 void sub_ellipse_opt::set_params(vector<MatrixXf> coor, vector<double> params, vector<double> b_c)
@@ -112,7 +114,7 @@ vector<double> sub_ellipse_opt::solve_3(vector<double> x0, vector<double> x1)
     opt.set_xtol_rel(1e-8);
     opt.set_maxeval(1000);
 
-    double minf_0, minf_1;
+//    double minf_0, minf_1;
     vector<double> x(3);
 
     try{

@@ -10,6 +10,8 @@ namespace ellipse_opt{
     double bias1, bias2, bias3, bias4, bias5, bias6;
     double init_center_x, init_center_y, init_radius;
     double count=0;
+
+    double minf_0, minf_1;
 }
 
 // 构造函数
@@ -46,20 +48,13 @@ vector<double> ellipse_opt::solve(vector<double> x0, vector<double> x1)
     opt.set_xtol_rel(1e-6);
     opt.set_maxeval(1000);
 
-    double minf_0, minf_1;
+//    double minf_0, minf_1;
     vector<double> x(5);
 
     try{
         nlopt::result result_0 = opt.optimize(x0, minf_0);
         nlopt::result result_1 = opt.optimize(x1, minf_1);
 
-
-//        cout << "优化后 k1：" << k1 << endl;
-//        cout << "优化后 k2：" << k2 << endl;
-//        cout << "优化后 k3：" << k3 << endl;
-//        cout << "优化后 k4：" << k4 << endl;
-//        cout << "优化后 k5：" << k5 << endl;
-//        cout << "优化后 k6：" << k6 << endl;
 
         cout << "minf_0: " << minf_0 << endl;
         cout << "minf_1: " << minf_1 << endl;
@@ -99,7 +94,7 @@ vector<double> ellipse_opt::solve_2(vector<double> x0, vector<double> x1)
     opt.set_xtol_rel(1e-6);
     opt.set_maxeval(1000);
 
-    double minf_0, minf_1;
+//    double minf_0, minf_1;
     vector<double> x(5);
 
     try{
@@ -138,7 +133,7 @@ vector<double> ellipse_opt::solve_3(vector<double> x0, vector<double> x1)
     opt.set_xtol_rel(1e-8);
     opt.set_maxeval(1000);
 
-    double minf_0, minf_1;
+//    double minf_0, minf_1;
     vector<double> x(5);
 
     try{
@@ -177,7 +172,7 @@ vector<double> ellipse_opt::solve_4(vector<double> x0, vector<double> x1)
     opt.set_xtol_rel(1e-3);
     opt.set_maxeval(1000);
 
-    double minf_0, minf_1;
+//    double minf_0, minf_1;
     vector<double> x(5);
 
     try{

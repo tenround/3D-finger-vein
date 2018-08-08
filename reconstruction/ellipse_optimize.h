@@ -17,6 +17,8 @@ using namespace Eigen;
 // using namespace nlopt;
 
 namespace ellipse_opt {
+    extern double minf_0, minf_1;
+
     void set_params(vector<MatrixXf> coor, vector<double> params);
     vector<double> solve(vector<double> x0, vector<double> x1);
     vector<double> solve_2(vector<double> x0, vector<double> x1);

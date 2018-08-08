@@ -370,7 +370,7 @@ cv::Mat Finger_Reconstruct::img_rectify(cv::Mat src, Eigen::MatrixXf H)
     return dst;
 }
 
-void Finger_Reconstruct::reconstruct(vector<vector<int>> edge_arr)
+void Finger_Reconstruct::reconstruct(vector<vector<int>> edge_arr, double n_len)
 {
     int min_y = 91;
     int max_y = 490;
@@ -441,25 +441,17 @@ void Finger_Reconstruct::reconstruct(vector<vector<int>> edge_arr)
 
             last_x = x0;
 
-//            cout << "优化前 k1：" << k1 << endl;
-//            cout << "优化前 k2：" << k2 << endl;
-//            cout << "优化前 k3：" << k3 << endl;
-//            cout << "优化前 k4：" << k4 << endl;
-//            cout << "优化前 k5：" << k5 << endl;
-//            cout << "优化前 k6：" << k6 << endl;
-
-//            cout << "优化前 b：" << x0[0] << endl;
-//            cout << "优化前 c：" << x0[1] << endl;
-//            cout << "优化前 d：" << x0[2] << endl;
-//            cout << "优化前 e：" << x0[3] << endl;
-//            cout << "优化前 r：" << x0[4] << endl;
-
             // 求解优化问题
             vector<double> temp = ellipse_opt::solve_3(x0, x1);
             b = temp[0];  c = temp[1];
             x[0] = temp[2];
             x[1] = temp[3];
             x[2] = temp[4];
+
+//            if(isnan(ellipse_opt::minf_0) && isnan(ellipse_opt::minf_1))
+//            {
+//                continue;
+//            }
 
             // 绘制初始椭圆
             if(disp_flag || save_flag)
@@ -493,6 +485,13 @@ void Finger_Reconstruct::reconstruct(vector<vector<int>> edge_arr)
             // 求解优化问题
             vector<double> temp = sub_ellipse_opt::solve_3(x0, x1);
             x = temp;
+
+            if(isnan(sub_ellipse_opt::minf_0) && isnan(sub_ellipse_opt::minf_1))
+            {
+//                x = x0;
+                continue;
+            }
+
         }
 
         double d = x[0], e = x[1], f = x[2];
@@ -563,9 +562,11 @@ void Finger_Reconstruct::reconstruct(vector<vector<int>> edge_arr)
     vector<double> b_arr, c_arr;
     vector<double> d_arr_src, e_arr_src, f_arr_src;
     vector<double> d_arr, e_arr, f_arr;
-    for(int i=z[0];i<=z[z.size()-1];i++)
+//    double n_len = 800;
+    double interp = (z[z.size()-1] - z[0] + 1) / (n_len );
+    for(double i=z[0];i<=z[z.size()-1];i+=interp)
     {
-        z_arr.push_back((double)i);
+        z_arr.push_back(i);
         b_arr.push_back(b);
         c_arr.push_back(c);
     }

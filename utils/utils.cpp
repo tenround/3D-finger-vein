@@ -107,3 +107,11 @@ void test_interp()
     x_dst = interp1_linear(x, z, z_dst);
 
 }
+
+// 测量时间
+long getCurrentTime()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+}

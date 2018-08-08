@@ -11,6 +11,15 @@ namespace map_texture {
     vector<vector<double>> y_3D;
     vector<vector<double>> z_3D;
 
+    vector<double> center_x, center_y, center_z;
+
+    // 投影纹理图
+    cv::Mat texture_prj;
+    // 投影深度图（原始）
+    vector<vector<double>> depth_prj;
+    // 投影深度图（归一化）
+    cv::Mat depth_prj_img;
+
     Eigen::MatrixXf coor_c1, coor_c2, coor_c3;
     int n_ellipse;
 }
@@ -57,6 +66,14 @@ void map_texture::map_texture(vector<vector<double>> X_arr, vector<double> z_arr
     // 使用Mat来保存映射的纹理图像
     // cv::Mat vein_texture;
     texture_img.create(n_ellipse, n_len, CV_8UC1);
+
+    x_3D.clear();
+    y_3D.clear();
+    z_3D.clear();
+    texture_3D.clear();
+    center_x.clear();
+    center_y.clear();
+    center_z.clear();
 
     // 遍历手指的每个截面，计算切点对应的index
     // 共有视野部分加权求和，非共有视野部分直接映射
@@ -169,13 +186,6 @@ void map_texture::map_texture(vector<vector<double>> X_arr, vector<double> z_arr
         p_contact_5 << x5, y5, 1;
         p_contact_6 << x6, y6, 1;
 
-//        cout << "p_contact_1: " << p_contact_1 << endl;
-//        cout << "p_contact_2: " << p_contact_2 << endl;
-//        cout << "p_contact_3: " << p_contact_3 << endl;
-//        cout << "p_contact_4: " << p_contact_4 << endl;
-//        cout << "p_contact_5: " << p_contact_5 << endl;
-//        cout << "p_contact_6: " << p_contact_6 << endl;
-
         Vector3f norm_p_contact_1, norm_p_contact_2, norm_p_contact_3, norm_p_contact_4, norm_p_contact_5, norm_p_contact_6;
         norm_p_contact_1 = inv_T * p_contact_1;
         norm_p_contact_2 = inv_T * p_contact_2;
@@ -217,9 +227,14 @@ void map_texture::map_texture(vector<vector<double>> X_arr, vector<double> z_arr
         edge_idx_list[4] = edge_idx_5;
         edge_idx_list[5] = edge_idx_6;
 
-        // [vein_texture] = one_ellipse_texture(edge_idx, img_1, img_2, img_3, edge_arr, step, rx, ry, T, z_arr, pts_ellipse)
-//        [vein_texture(:, i)] = one_ellipse_texture(edge_idx, img_1, img_2, img_3, edge_arr, step, rx, ry, T, z_arr(i), pts_ellipse);
+//        clock_t start, finish;
+//        long t1, t2;
+//        start = clock();
+//        t1 = getCurrentTime();
         vector<uchar> ellipse_texture = one_ellipse_texture(edge_idx_list, img_list, edge_arr, step, rx, ry, T, z_arr[i], P_list);
+//        finish = clock();
+//        t2 = getCurrentTime();
+//        cout << "纹理映射:" << (double)(finish - start) / CLOCKS_PER_SEC * 1000 << "ms" << "/" << (t2 - t1) << "ms" << endl;
 
         texture_3D.push_back(ellipse_texture);
         for(int j=0; j<n_ellipse; j++)
@@ -227,7 +242,6 @@ void map_texture::map_texture(vector<vector<double>> X_arr, vector<double> z_arr
             texture_img.at<uchar>(j, i) = ellipse_texture[j];
         }
 
-//        double x_sum=0, y_sum=0;
         double x_normal, y_normal;
         vector<double> real_x_list;
         vector<double> real_y_list;
@@ -249,19 +263,15 @@ void map_texture::map_texture(vector<vector<double>> X_arr, vector<double> z_arr
             real_y_list.push_back(real_y);
             real_z_list.push_back(z_arr[i]);
 
-//            x_sum += x_normal;
-//            y_sum += y_normal;
         }
-//        x_sum = x_sum / real_x_list.size();
-//        y_sum = y_sum / real_y_list.size();
-
 
         x_3D.push_back(real_x_list);
         y_3D.push_back(real_y_list);
         z_3D.push_back(real_z_list);
+        center_x.push_back(-x0);
+        center_y.push_back(-y0);
+        center_z.push_back(z_arr[i]);
     }
-
-
 
 }
 
@@ -413,9 +423,9 @@ vector<uchar> map_texture::one_ellipse_texture(vector<int> edge_idx_list, vector
 //        idx = rem(edge_idx{3,1} + pt, pts_ellipse) + 1;
             int idx = (edge_idx_3_1 + pt) % n_ellipse;
 //        vein_texture1(idx) = uint8( img_1(reflect_img_x(n_pixs - pt), reflect_img_y(n_pixs - pt)) );
-            uchar img_pixel = img_1.at<uchar>(reflect_x_list[n_pixels - pt - 1], reflect_y_list[n_pixels - pt - 1]);
-            int row = reflect_x_list[n_pixels - pt - 1];
-            int col = reflect_y_list[n_pixels - pt - 1];
+//            uchar img_pixel = img_1.at<uchar>(reflect_x_list[n_pixels - pt - 1], reflect_y_list[n_pixels - pt - 1]);
+//            int row = reflect_x_list[n_pixels - pt - 1];
+//            int col = reflect_y_list[n_pixels - pt - 1];
             vein_texture_1[idx] = img_1.at<uchar>(reflect_x_list[n_pixels - pt - 1], reflect_y_list[n_pixels - pt - 1]);
         }
     }
@@ -579,7 +589,7 @@ vector<uchar> map_texture::one_ellipse_texture(vector<int> edge_idx_list, vector
             }
 
         }
-        int n_pixels = t_list.size();
+        size_t n_pixels = t_list.size();
 
         for (int pt = 0; pt < n_pixels; pt++) {
 //        idx = rem(edge_idx{2,1} + pt, pts_ellipse) + 1;
@@ -910,7 +920,7 @@ vector<uchar> map_texture::one_ellipse_texture(vector<int> edge_idx_list, vector
             }
 
         }
-        int n_pixels = t_list.size();
+        size_t n_pixels = t_list.size();
         vector<double> weight2;
         weight2.clear();
         vector<double> weight3;
@@ -1130,7 +1140,7 @@ vector<uchar> map_texture::one_ellipse_texture(vector<int> edge_idx_list, vector
             }
 
         }
-        int n_pixels = t_list.size();
+        size_t n_pixels = t_list.size();
         vector<double> weight1;
         weight1.clear();
         vector<double> weight3;
@@ -1247,3 +1257,482 @@ vector<uchar> map_texture::one_ellipse_texture(vector<int> edge_idx_list, vector
     return vein_texture;
 }
 
+void map_texture::projection(double n_theta, double n_len)
+{
+    clock_t start, finish;
+    long t1, t2;
+
+    depth_prj.clear();
+    vector<double> line_x = center_x;
+    vector<double> line_y = center_y;
+    vector<double> line_z = center_z;
+
+    // 对中线取均值
+    double line_x_sum = accumulate(line_x.begin(), line_x.end(), 0);
+    double line_y_sum = accumulate(line_y.begin(), line_y.end(), 0);
+    double line_z_sum = accumulate(line_z.begin(), line_z.end(), 0);
+    double line_x_mean = line_x_sum / line_x.size();
+    double line_y_mean = line_y_sum / line_y.size();
+    double line_z_mean = line_z_sum / line_z.size();
+
+    // 所有坐标都减去均值
+    for(size_t i=0; i<line_x.size(); i++)
+    {
+        line_x[i] = line_x[i] - line_x_mean;
+        line_y[i] = line_y[i] - line_y_mean;
+        line_z[i] = line_z[i] - line_z_mean;
+    }
+    vector<vector<double>> line(3);
+    line[0] = line_x;
+    line[1] = line_y;
+    line[2] = line_z;
+
+    Eigen::MatrixXf line_data = Eigen::MatrixXf::Zero(line_x.size(), 3);
+    for(size_t i=0; i<line_x.size(); i++)
+    {
+        line_data(i, 0) = line_x[i];
+        line_data(i, 1) = line_y[i];
+        line_data(i, 2) = line_z[i];
+    }
+
+    Eigen::JacobiSVD<Eigen::MatrixXf> svd(line_data, Eigen::ComputeFullU | Eigen::ComputeFullV);
+//    Eigen::JacobiSVD<Eigen::MatrixXf> svd(line_data, Eigen::ComputeThinU | Eigen::ComputeThinV);
+//    Eigen::MatrixXf S = svd.singularValues();
+//    Eigen::MatrixXf U = svd.matrixU();
+    Eigen::MatrixXf V = svd.matrixV();
+//    cout << "S: " << S.rows() << "*" << S.cols() << endl;
+//    cout << "U: " << U.rows() << "*" << U.cols() << endl;
+//    cout << "V: " << V.rows() << "*" << V.cols() << endl;
+
+    Eigen::Vector3f direction = V.block(0, 0, 3, 1);
+    if(direction(2) < 0)
+    {
+        direction = -direction;
+    }
+//    cout << "direction: " << direction << endl;
+//    cout << "V: " << V << endl;
+//    cout << line_data.block(0, 0, 1, 3) << endl;
+//    cout << line_x[0] << ", " << line_y[0] << ", " << line_z[0] << endl;
+//    cout << line_data.rows() << ", " << line_data.cols() << endl;
+
+    // direction: 3 * 1
+    // setted_vec: 3 * 1
+    Vector3f setted_vec(3);
+    setted_vec << 0, 0, 1;
+    Vector3f norm_vec = direction.cross(setted_vec);
+    norm_vec = norm_vec / norm_vec.norm();
+
+//    cout << "norm_vec: " << norm_vec << endl;
+
+    double alpha = acos(direction.dot(setted_vec) / (setted_vec.norm() * direction.norm()));
+    alpha = alpha / pi * 180;  // 弧度转角度
+    if(alpha > 100)
+    {
+        alpha = 180 - alpha;
+    }
+
+    // 旋转所有的三维点云
+    start = clock();
+    t1 = getCurrentTime();
+    vector<vector<double>> x_src = x_3D;
+    vector<vector<double>> y_src = y_3D;
+    vector<vector<double>> z_src = z_3D;
+    for(size_t i=0; i<x_src.size(); i++)
+    {
+        for(size_t j=0; j<x_src[0].size(); j++)
+        {
+            double x = x_src[i][j];
+            double y = y_src[i][j];
+            double z = z_src[i][j];
+            Vector3f xyz_src;
+            xyz_src << x, y, z;
+            Vector3f xyz_res = rotateArbitraryAxis(xyz_src, norm_vec, -alpha);
+            x_src[i][j] = xyz_res(0);
+            y_src[i][j] = xyz_res(1);
+            z_src[i][j] = xyz_res(2);
+        }
+    }
+    finish = clock();
+    t2 = getCurrentTime();
+    cout << "旋转所有的三维点云:" << (double)(finish - start) / CLOCKS_PER_SEC * 1000 << "ms" << "/" << (t2 - t1) << "ms" << endl;
+
+    // 3DFM标准化正常
+//    coor_plot_3d::plot_3d_finger_vein_model(x_src, y_src, z_src, map_texture::texture_3D);
+
+    // 将xyz坐标的数组合并成一维
+    start = clock();
+    t1 = getCurrentTime();
+    vector<double> x_new;
+    x_new.clear();
+    vector<double> y_new;
+    y_new.clear();
+    vector<double> z_new;
+    z_new.clear();
+    // 将纹理也合并为一维，与xyz坐标一一对应
+    vector<uchar> texture_new;
+    texture_new.clear();
+    for(size_t i=0; i<x_src.size(); i++)
+    {
+        for(size_t j=0; j<x_src[0].size(); j++)
+        {
+            x_new.push_back(x_src[i][j]);
+            y_new.push_back(y_src[i][j]);
+            z_new.push_back(z_src[i][j]);
+            texture_new.push_back(texture_3D[i][j]);
+        }
+    }
+    finish = clock();
+    t2 = getCurrentTime();
+    cout << "将xyz坐标的数组合并成一维:" << (double)(finish - start) / CLOCKS_PER_SEC * 1000 << "ms" << "/" << (t2 - t1) << "ms" << endl;
+
+    // 799 * 799
+//    cout << "x_new: " << x_new.size() << endl;
+//    cout << "y_new: " << y_new.size() << endl;
+//    cout << "z_new: " << z_new.size() << endl;
+//    cout << "texture_new: " << texture_new.size() << endl;
+
+//    double vertex_num = x_3D.size() * x_3D[0].size();
+
+    // 转换到极坐标系
+    start = clock();
+    t1 = getCurrentTime();
+    vector<double> theta_3D;
+    theta_3D.clear();
+    vector<double> rho_3D;
+    rho_3D.clear();
+    for(size_t i=0; i<x_new.size(); i++)
+    {
+        double x = x_new[i];
+        double y = y_new[i];
+        Vector2f pol = cart2pol(x, y);
+        double theta = pol(0);
+        double rho = pol(1);
+        theta_3D.push_back(theta);
+        rho_3D.push_back(rho);
+    }
+    finish = clock();
+    t2 = getCurrentTime();
+    cout << "转换到极坐标系:" << (double)(finish - start) / CLOCKS_PER_SEC * 1000 << "ms" << "/" << (t2 - t1) << "ms" << endl;
+
+//    cout << "theta_3D: " << theta_3D.size() << endl;
+//    cout << "rho_3D: " << rho_3D.size() << endl;
+
+    // theta_3D = theta_3D - min(theta_3D);
+    start = clock();
+    t1 = getCurrentTime();
+    vector<double>::iterator min_theta = min_element(theta_3D.begin(), theta_3D.end());
+    double min_theta_val = *min_theta;
+    for(size_t i=0; i<theta_3D.size(); i++)
+    {
+        double temp = theta_3D[i] - min_theta_val;
+        theta_3D[i] = temp;
+    }
+    finish = clock();
+    t2 = getCurrentTime();
+    cout << "theta_3D = theta_3D - min(theta_3D):" << (double)(finish - start) / CLOCKS_PER_SEC * 1000 << "ms" << "/" << (t2 - t1) << "ms" << endl;
+
+    // z_3D_new = z_3D_new - min(z_3D_new);
+    start = clock();
+    t1 = getCurrentTime();
+    vector<double>::iterator min_z = min_element(z_new.begin(), z_new.end());
+    double min_z_val = *min_z;
+    for(size_t i=0; i<z_new.size(); i++)
+    {
+        double temp = z_new[i] - min_z_val;
+        z_new[i] = temp;
+    }
+    finish = clock();
+    t2 = getCurrentTime();
+    cout << "z_3D_new = z_3D_new - min(z_3D_new):" << (double)(finish - start) / CLOCKS_PER_SEC * 1000 << "ms" << "/" << (t2 - t1) << "ms" << endl;
+
+    // vein_data_3D = [(1 : vertex_num)', theta_3D, rho_3D, z_3D_new, reshape(double(texture_3D), [vertex_num, 1])];
+    // 第一行对应所有点的编号，第二行为theta坐标，第三行为rho坐标，第四行为z坐标， 第5行为对应该点的纹理值
+    sort_rows(theta_3D, rho_3D, z_new, texture_new, 3);
+
+    double theta = 360.0 / n_theta;
+    double delta_z = z_new[z_new.size()-1] / n_len;  // num_z = 360
+    double delta_theta = pi / 180 * theta;
+    double num_z = floor(z_new[z_new.size()-1] / delta_z);
+    double num_theta = round(2 * pi / delta_theta);
+
+    // serial_num, theta_3D, rho_3D, z_new, texture_new
+    // 映射纹理图与深度图
+    start = clock();
+    t1 = getCurrentTime();
+    int i, j;
+    j = 1;
+    cv::Mat temp_texture_prj;
+    temp_texture_prj.create(num_z, num_theta, CV_8UC1);
+//    cv::Mat temp_depth_prj_img;
+//    temp_depth_prj_img.create(num_z, num_theta, CV_8UC1);
+    vector<vector<double> > temp_depth_prj(num_z, vector<double>(num_theta, 0));
+    for(i=1;i<=num_z;i++)
+    {
+        double thre_z = delta_z * i;
+        int start_idx = j;
+        while(z_new[j-1] < thre_z)
+        {
+            j++;
+        }
+        int end_idx = j;
+
+        // tmp_vein_data = vein_data_3D_z(start_idx : end_idx, :);
+        vector<double> temp_z;
+        vector<double> temp_theta;
+        vector<double> temp_rho;
+        vector<uchar> temp_texture;
+        for(int k=start_idx; k<=end_idx; k++)
+        {
+            temp_z.push_back(z_new[k]);
+            temp_theta.push_back(theta_3D[k]);
+            temp_rho.push_back(rho_3D[k]);
+            temp_texture.push_back(texture_new[k]);
+        }
+
+        // tmp_vein_data_theta = sortrows(tmp_vein_data, 2);
+        // 按照theta排序
+        sort_rows(temp_theta, temp_rho, temp_z, temp_texture, 1);
+        MatrixXf flag_theta = MatrixXf::Zero(temp_theta.size(), num_theta);
+
+        int m = 1;
+        for(int k=1; k<=num_theta; k++)
+        {
+            double thre_theta = delta_theta * k;
+            if(m > temp_theta.size())
+                continue;
+            while(temp_theta[m-1] < thre_theta)
+            {
+                m++;
+                if(m > temp_theta.size())
+                {
+                    break;
+                }
+                flag_theta(m-1, k-1) = 1;
+            }
+        }
+        // point_nums = sum(flag_theta, 1);
+        MatrixXf point_nums = flag_theta.colwise().sum();
+        // point_nums = point_nums + double(point_nums == 0);
+        for(int r=0; r<point_nums.rows(); r++)
+        {
+            for(int c=0; c<point_nums.cols(); c++)
+            {
+                double temp;
+                if(point_nums(r, c) == 0)
+                    temp = 1;
+                else
+                    temp = 0;
+                point_nums(r, c) += temp;
+            }
+        }
+
+//        dst_matrix(i, 1 : 2 : end) = (flag_theta' * tmp_vein_data_theta(:, 5))' ./ point_nums;
+        // MatrixXf tmp_texture_mat = MatrixXf::Zero(temp_texture.size(), 1);
+        VectorXf tmp_texture_mat = VectorXf::Zero(temp_texture.size());
+        for(int k=0; k<temp_texture.size(); k++)
+            tmp_texture_mat(k) = temp_texture[k];
+        MatrixXf temp1 = flag_theta.transpose() * tmp_texture_mat;
+        MatrixXf dst_matrix_1 = temp1.transpose().cwiseQuotient(point_nums);
+
+//        dst_matrix(i, 2 : 2 : end) = (flag_theta' * tmp_vein_data_theta(:, 3))' ./ point_nums;
+        VectorXf tmp_rho_mat = VectorXf::Zero(temp_rho.size());
+        for(int k=0; k<temp_rho.size(); k++)
+            tmp_rho_mat(k) = temp_rho[k];
+        MatrixXf temp2 = flag_theta.transpose() * tmp_rho_mat;
+        MatrixXf dst_matrix_2 = temp2.transpose().cwiseQuotient(point_nums);
+
+//        // 投影纹理图
+//        cv::Mat texture_prj;
+//        // 投影深度图（原始）
+//        vector<vector<double>> depth_prj;
+//        // 投影深度图（归一化）
+//        cv::Mat depth_prj_img;
+
+        // dst_matrix_1对应纹理，dst_matrix_2对应深度
+//        cout << "dst_matrix_1.cols(): " << dst_matrix_1.cols() << endl;
+//        cout << "dst_matrix_2.cols(): " << dst_matrix_2.cols() << endl;
+//        cout << "num_z: " << num_z << endl;
+        for(int c=0; c<dst_matrix_1.cols(); c++)
+        {
+            temp_texture_prj.at<uchar>(i-1, c) = (uchar)dst_matrix_1(0, c);
+        }
+        for(int c=0; c<dst_matrix_2.cols(); c++)
+        {
+            temp_depth_prj[i-1][c] = dst_matrix_2(0, c);
+        }
+    }
+    finish = clock();
+    t2 = getCurrentTime();
+    cout << "深度图/纹理图:" << (double)(finish - start) / CLOCKS_PER_SEC * 1000 << "ms" << "/" << (t2 - t1) << "ms" << endl;
+
+    // 保存到共有变量中，外部可从外部访问
+    texture_prj = temp_texture_prj;
+    depth_prj = temp_depth_prj;
+    depth_prj_img = mat2gray(temp_depth_prj);
+}
+
+// 某个点绕任意轴旋转任意角
+// 资料链接：https://www.cnblogs.com/graphics/archive/2012/08/10/2627458.html
+Vector3f map_texture::rotateArbitraryAxis(Vector3f xyz_src, Vector3f axis, double theta)
+{
+    // 对轴向量做归一化
+    axis = axis / axis.norm();
+    // 轴向量的xyz坐标
+    double a = axis(0);
+    double b = axis(1);
+    double c = axis(2);
+
+    theta = theta * pi / 180;   // 角度转弧度
+    double cos_t = cos(theta);
+    double sin_t = sin(theta);
+
+    Matrix3f M;
+    M << (a*a + (1-a*a)*cos_t), (a*b*(1-cos_t) + c*sin_t), (a*c*(1-cos_t) - b*sin_t),
+         (a*b*(1-cos_t) - c*sin_t), (b*b + (1-b*b)*cos_t), (b*c*(1-cos_t) + a*sin_t),
+         (a*c*(1-cos_t) + b*sin_t), (b*c*(1-cos_t) - a*sin_t), (c*c + (1-c*c)*cos_t);
+
+    Vector3f xyz_res = M * xyz_src;
+
+    return xyz_res;
+}
+
+Vector2f map_texture::cart2pol(double x, double y)
+{
+    Vector2f pol;
+    double rho = sqrt(x*x + y*y);
+    double theta = atan(y / x);
+
+    // 默认的atan处理方式
+//    if(y >=0 && x >= 0)  // 第一象限
+//        theta = theta;
+//    else if(x < 0 && y >= 0)  // 第二象限
+//        theta = theta + pi;
+//    else if(x < 0 && y < 0)  // 第三象限
+//        theta = theta + pi;
+//    else if(x >=0 && y < 0)  // 第四象限
+//        theta = theta + pi * 2;
+
+    // matlab中的atan2函数
+    if(x > 0)  // x > 0
+        theta = theta;
+    else if(x < 0 && y >= 0)
+        theta = theta + pi;
+    else if(x < 0 && y < 0)
+        theta = theta - pi;
+    else if(x == 0 && y < 0)
+        theta = - pi / 2;
+    else if(x == 0 && y > 0)
+        theta = pi / 2;
+    else
+        theta = 0;
+
+    pol << theta, rho;
+    return pol;
+}
+
+template <typename T>
+vector<size_t> sort_indexes(const vector<T> &v) {
+//initialize original index locations
+    vector<size_t> idx(v.size());
+    for (size_t i = 0; i!= idx.size(); ++i) idx[i] = i;
+//sort indexes based on comparing values in v
+    sort(idx.begin(), idx.end(),
+         [&v](size_t i1, size_t i2) {return v[i1] <v[i2];});
+    return idx;
+}
+
+// 返回排序后的索引
+template<class T>
+vector<size_t> map_texture::sort_index(vector<T> & a)
+{
+    vector<size_t> index_list(a.size());
+    vector<T> a_bak(a.size());
+    // 深拷贝
+    for(size_t i=0; i<a.size(); i++)
+    {
+        a_bak[i] = a[i];
+    }
+
+    // 对a升序排列
+//    sort(a.begin(), a.end());
+
+    // 记录当前行是否已被占用
+    vector<uchar> flag(a.size());
+
+    // 查找index
+    index_list = sort_indexes<T>(a);
+
+    return index_list;
+}
+
+void map_texture::sort_rows( vector<double> &theta_3D, vector<double> &rho_3D, vector<double> &z_new, vector<uchar> &texture_new, int col)
+{
+    vector<size_t> index_list;
+    if(col == 3)
+        index_list = sort_index<double>(z_new);
+    else if(col == 2)
+        index_list = sort_index<double>(rho_3D);
+    else if(col == 1)
+        index_list = sort_index<double>(theta_3D);
+    else
+        index_list = sort_index<double>(z_new);
+
+    vector<double> z_new_temp(z_new.size());
+    vector<double> theta_3D_temp(theta_3D.size());
+    vector<double> rho_3D_temp(rho_3D.size());
+    vector<uchar> texture_new_temp(texture_new.size());
+    for(size_t i=0; i<index_list.size(); i++)
+    {
+        size_t index = index_list[i];
+        theta_3D_temp[i] = theta_3D[index];
+        rho_3D_temp[i] = rho_3D[index];
+        texture_new_temp[i] = texture_new[index];
+        z_new_temp[i] = z_new[index];
+    }
+    theta_3D = theta_3D_temp;
+    rho_3D = rho_3D_temp;
+    texture_new = texture_new_temp;
+    z_new = z_new_temp;
+}
+
+// matlab的mat2gray函数实现
+// 对浮点数矩阵做归一化，并转换为opencv的Mat类的实例
+cv::Mat map_texture::mat2gray(vector<vector<double>> mat)
+{
+    // 先找到其中的最大值和最小值
+    double max, min;
+    vector<double> mat_row;
+    vector<double>::iterator max_p, min_p;
+    for(int i=0; i<mat.size(); i++)
+    {
+        mat_row = mat[i];
+        max_p = max_element(mat_row.begin(), mat_row.end());
+        min_p = min_element(mat_row.begin(), mat_row.end());
+        if(i == 0)
+        {
+            max = (*max_p);
+            min = (*min_p);
+        } else
+        {
+            if((*max_p) > max)
+                max = (*max_p);
+            if((*min_p) < min)
+                min = (*min_p);
+        }
+    }
+
+    // 归一化
+//    double gray_min = 0.0;
+//    double gray_max = 1.0;
+    cv::Mat gray;
+    gray.create(cv::Size(mat.size(), mat[0].size()), CV_32FC1);
+    for(int i=0; i<mat.size(); i++)
+    {
+        for(int j=0; j<mat[0].size(); j++)
+        {
+            gray.at<float>(i, j) = (mat[i][j] - min) / (max - min);
+        }
+    }
+
+    return gray;
+}

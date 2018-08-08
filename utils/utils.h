@@ -13,6 +13,7 @@
 #include <time.h>
 #include <sys/syscall.h>
 #include <glog/logging.h>
+#include <sys/time.h>
 
 using namespace std;
 using namespace cv;
@@ -25,5 +26,6 @@ void init_log(char* argv[]);
 double poly_num(int iu, int il, int i, double lx, double ux);
 vector<double> interp1_linear(vector<double> x1, vector<double> x2, vector<double> x2_dst);
 void test_interp();
+long getCurrentTime();
 
 #endif //INC_3D_FINGER_VEIN_UTILS_H

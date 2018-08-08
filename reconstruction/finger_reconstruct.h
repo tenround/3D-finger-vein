@@ -51,7 +51,7 @@ public:
     void set_cam_param();       // 设置3个相机的内外参以及其他参数
     void print_cam_param();     // 打印相机参数
     cv::Mat img_rectify(cv::Mat src, Eigen::MatrixXf H);    // 图像校正
-    void reconstruct(vector<vector<int>> edge_arr);     // 三维重建
+    void reconstruct(vector<vector<int>> edge_arr, double n_len);     // 三维重建
     void calc_param(int I1_u, int I1_b, int I2_u, int I2_b, int I3_u, int I3_b);    // 计算坐标系以及约束线参数
     void convert_3d_coor(double n);
 

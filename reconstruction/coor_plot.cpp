@@ -25,15 +25,15 @@ void coor_plot::close()
     plt::close();
 }
 
-void coor_plot::plot_constraint_line(double k, double bias)
+void coor_plot::plot_constraint_line(float k, float bias)
 {
     short n = 500;       // num of points
-    double x_max = 20.;
-    double x_min = -20.;
-    double step = (x_max - x_min) / (n - 1);
-    vector<double> x, y;
+    float x_max = 20.;
+    float x_min = -20.;
+    float step = (x_max - x_min) / (n - 1);
+    vector<float> x, y;
     // int idx = 0;
-    for(double i=x_min;i<=x_max;i=i+step)
+    for(float i=x_min;i<=x_max;i=i+step)
     {
         x.push_back(i);
         y.push_back(k * i + bias);
@@ -42,18 +42,18 @@ void coor_plot::plot_constraint_line(double k, double bias)
     plt::plot(x, y);
 }
 
-void coor_plot::plot_ellipse(vector<double> x)
+void coor_plot::plot_ellipse(vector<float> x)
 {
-    double a, b, c, d, e, f;
+    float a, b, c, d, e, f;
     a = 1;  b = x[0]; c = x[1];
     d = x[2];  e = x[3];  f = x[4];
 
     // 椭圆方程： a*x*x + b*y*y + c*x*y + d*x + e*y + f = 0
-    double x0, y0;
+    float x0, y0;
     x0 = (b*d - c*e) / (-c*c + b);
     y0 = (e - c*d) / (-c*c + b);
     x0 = x0 / 2; y0 = y0 / 2;
-    double alpha = atan(2 * c / (b - 1)) / 2;
+    float alpha = atan(2 * c / (b - 1)) / 2;
     if(alpha > M_PI / 4)
     {
         alpha = M_PI/2 - alpha;
@@ -64,7 +64,7 @@ void coor_plot::plot_ellipse(vector<double> x)
             alpha = -M_PI / 2 - alpha;
         }
     }
-    double aa, bb, ff, rx, ry;
+    float aa, bb, ff, rx, ry;
     aa = cos(alpha)*(cos(alpha) - c*sin(alpha)) - sin(alpha)*(c*cos(alpha) - b*sin(alpha));
     bb = cos(alpha)*(b*cos(alpha) + c*sin(alpha)) + sin(alpha)*(sin(alpha) + c*cos(alpha));
     ff = f + y0*(b*y0 - e + c*x0) + x0*(x0 - d + c*y0) - y0*(c*cos(alpha) - b*sin(alpha)) - x0*(cos(alpha) - c*sin(alpha)) - y0*(b*cos(alpha) + c*sin(alpha)) - x0*(sin(alpha) + c*cos(alpha));
@@ -75,11 +75,11 @@ void coor_plot::plot_ellipse(vector<double> x)
     R << cos(alpha), sin(alpha),
         -sin(alpha), cos(alpha);
 
-    double theta;
-    double n = 500;
-    double step = (2*M_PI) / (n - 1);
-    double ellipse_x, ellipse_y;
-    vector<double> ellipse_x_list, ellipse_y_list;
+    float theta;
+    float n = 500;
+    float step = (2*M_PI) / (n - 1);
+    float ellipse_x, ellipse_y;
+    vector<float> ellipse_x_list, ellipse_y_list;
     Eigen::Vector2f ellipse_xy;
     Eigen::Vector2f Rotation_ellipse;
     for(theta=0; theta<=2*M_PI; theta+=step)
@@ -140,14 +140,14 @@ namespace coor_plot_3d {
     GLfloat times=1;
 
     // 待绘制点云的XYZ坐标
-    vector<vector<double>> X_3D;
-    vector<vector<double>> Y_3D;
-    vector<vector<double>> Z_3D;
+    vector<vector<float>> X_3D;
+    vector<vector<float>> Y_3D;
+    vector<vector<float>> Z_3D;
     vector<vector<unsigned char>> texture_3D;
 };
 
 // 将三维点云的XYZ坐标放入类中
-void coor_plot_3d::set_point_cloud(vector<vector<double>> X, vector<vector<double>> Y, vector<vector<double>> Z)
+void coor_plot_3d::set_point_cloud(vector<vector<float>> X, vector<vector<float>> Y, vector<vector<float>> Z)
 {
     X_3D = X;
     Y_3D = Y;
@@ -175,6 +175,59 @@ void coor_plot_3d::render_screen()
     // 坐标系绕y轴旋转zRotAngle
     glRotatef(zRotAngle, 0.0f, 0.0f, 1.0f);
 
+    // 绘制坐标系
+    // x轴
+    //平滑处理
+    glEnable(GL_POINT_SMOOTH);
+    glHint(GL_POINT_SMOOTH, GL_NICEST);
+    GLfloat x_start = -60.0f;
+    GLfloat x_end = 60.0f;
+    GLfloat array_len = 10.0f;
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glLineWidth(3);
+    glBegin(GL_LINES);
+    glVertex3f(x_start, 0.0f, 0.0f);
+    glVertex3f(x_end, 0.0f, 0.0f);
+
+    glVertex3f(x_end, 0.0f, 0.0f);
+    glVertex3f(x_end-array_len, array_len, 0.0f);
+
+    glVertex3f(x_end, 0.0f, 0.0f);
+    glVertex3f(x_end-array_len, -array_len, 0.0f);
+    glEnd();
+
+    // y轴
+    GLfloat y_start = -60.0f;
+    GLfloat y_end = 60.0f;
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glLineWidth(3);
+    glBegin(GL_LINES);
+    glVertex3f(0.0f, y_start, 0.0f);
+    glVertex3f(0.0f, y_end, 0.0f);
+
+    glVertex3f(0.0f, y_end, 0.0f);
+    glVertex3f(array_len, y_end-array_len, 0.0f);
+
+    glVertex3f(0.0f, y_end, 0.0f);
+    glVertex3f(-array_len, y_end-array_len, 0.0f);
+    glEnd();
+
+    // z轴
+    GLfloat z_start = -60.0f;
+    GLfloat z_end = 60.0f;
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glLineWidth(3);
+    glBegin(GL_LINES);
+    glVertex3f(0.0f, 0.0f, z_start);
+    glVertex3f(0.0f, 0.0f, z_end);
+
+    glVertex3f(0.0f, 0.0f, z_end);
+    glVertex3f(array_len, 0.0f, z_end-array_len);
+
+    glVertex3f(0.0f, 0.0f, z_end);
+    glVertex3f(-array_len, 0.0f, z_end-array_len);
+    glEnd();
+
     // 当前点的大小，默认设为最小
     curSize = 3;
     int finger_len = (int)X_3D.size();
@@ -184,7 +237,7 @@ void coor_plot_3d::render_screen()
     //平滑处理
     glEnable(GL_POINT_SMOOTH);
     glHint(GL_POINT_SMOOTH, GL_NICEST);
-    glColor3f(1.0f, 1.0f, 0.0f);
+    glColor3f(0.0f, 1.0f, 1.0f);
     glBegin(GL_POINTS);
     for(int i=0; i<finger_len; i++)
     {
@@ -332,7 +385,7 @@ void coor_plot_3d::mouseMotion(int x, int y)
     glutPostRedisplay();
 }
 
-void coor_plot_3d::plot_3d_model(vector<vector<double>> X, vector<vector<double>> Y, vector<vector<double>> Z)
+void coor_plot_3d::plot_3d_model(vector<vector<float>> X, vector<vector<float>> Y, vector<vector<float>> Z)
 {
     set_point_cloud(X, Y, Z);
 
@@ -389,6 +442,59 @@ void coor_plot_3d::render_screen_finger_vein()
     glRotatef(zRotAngle, 0.0f, 0.0f, 1.0f);
 //    cout << "zRotAngle: " << zRotAngle << endl;
 
+    // 绘制坐标系
+    // x轴
+    //平滑处理
+    glEnable(GL_POINT_SMOOTH);
+    glHint(GL_POINT_SMOOTH, GL_NICEST);
+    GLfloat x_start = -80.0f;
+    GLfloat x_end = 80.0f;
+    GLfloat array_len = 10.0f;
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glLineWidth(3);
+    glBegin(GL_LINES);
+    glVertex3f(x_start, 0.0f, 0.0f);
+    glVertex3f(x_end, 0.0f, 0.0f);
+
+    glVertex3f(x_end, 0.0f, 0.0f);
+    glVertex3f(x_end-array_len, array_len, 0.0f);
+
+    glVertex3f(x_end, 0.0f, 0.0f);
+    glVertex3f(x_end-array_len, -array_len, 0.0f);
+    glEnd();
+
+    // y轴
+    GLfloat y_start = -80.0f;
+    GLfloat y_end = 80.0f;
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glLineWidth(3);
+    glBegin(GL_LINES);
+    glVertex3f(0.0f, y_start, 0.0f);
+    glVertex3f(0.0f, y_end, 0.0f);
+
+    glVertex3f(0.0f, y_end, 0.0f);
+    glVertex3f(array_len, y_end-array_len, 0.0f);
+
+    glVertex3f(0.0f, y_end, 0.0f);
+    glVertex3f(-array_len, y_end-array_len, 0.0f);
+    glEnd();
+
+    // z轴
+    GLfloat z_start = -80.0f;
+    GLfloat z_end = 80.0f;
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glLineWidth(3);
+    glBegin(GL_LINES);
+    glVertex3f(0.0f, 0.0f, z_start);
+    glVertex3f(0.0f, 0.0f, z_end);
+
+    glVertex3f(0.0f, 0.0f, z_end);
+    glVertex3f(array_len, 0.0f, z_end-array_len);
+
+    glVertex3f(0.0f, 0.0f, z_end);
+    glVertex3f(-array_len, 0.0f, z_end-array_len);
+    glEnd();
+
     // 当前点的大小，默认设为最小
     curSize = 3;
     int finger_len = (int)X_3D.size();
@@ -406,7 +512,7 @@ void coor_plot_3d::render_screen_finger_vein()
         {
 //            vector<vector<unsigned char>> texture_temp = texture_3D;
             unsigned char texture = texture_3D[i][j];
-            double gray_val_texture = (double)texture / 255;
+            float gray_val_texture = (float)texture / 255;
             glColor3f((GLfloat)gray_val_texture, (GLfloat)gray_val_texture, (GLfloat)gray_val_texture);
 //            glColor3f(1.0f, 1.0f, 0.0f);
 
@@ -430,7 +536,7 @@ void coor_plot_3d::render_screen_finger_vein()
     glutSwapBuffers();
 }
 
-void coor_plot_3d::set_finger_vein_point_cloud(vector<vector<double>> X, vector<vector<double>> Y, vector<vector<double>> Z, vector<vector<unsigned char>> texture)
+void coor_plot_3d::set_finger_vein_point_cloud(vector<vector<float>> X, vector<vector<float>> Y, vector<vector<float>> Z, vector<vector<unsigned char>> texture)
 {
     X_3D = X;
     Y_3D = Y;
@@ -438,7 +544,7 @@ void coor_plot_3d::set_finger_vein_point_cloud(vector<vector<double>> X, vector<
     texture_3D = texture;
 }
 
-void coor_plot_3d::plot_3d_finger_vein_model(vector<vector<double>> X, vector<vector<double>> Y, vector<vector<double>> Z, vector<vector<unsigned char>> texture)
+void coor_plot_3d::plot_3d_finger_vein_model(vector<vector<float>> X, vector<vector<float>> Y, vector<vector<float>> Z, vector<vector<unsigned char>> texture)
 {
     set_finger_vein_point_cloud(X, Y, Z, texture);
 
@@ -461,6 +567,7 @@ void coor_plot_3d::plot_3d_finger_vein_model(vector<vector<double>> X, vector<ve
     //设置窗口大小变化时的回调函数
     glutReshapeFunc(changeSize);
     //设置显示回调函数
+//    glutDisplayFunc(render_screen);
     glutDisplayFunc(render_screen_finger_vein);
     //设置按键输入处理回调函数
     glutSpecialFunc(keyFunc);
@@ -470,3 +577,4 @@ void coor_plot_3d::plot_3d_finger_vein_model(vector<vector<double>> X, vector<ve
     setupRenderingState();
     glutMainLoop();
 }
+

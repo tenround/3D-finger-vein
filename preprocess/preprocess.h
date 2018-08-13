@@ -15,6 +15,6 @@ using namespace cv;
 
 vector<cv::Mat> load_triple_imgs(string folder, string img_name);
 vector<cv::Mat> adjust_brightness(cv::Mat img_1, cv::Mat img_2, cv::Mat img_3, vector<vector<int>> edge_arr, int setVal);
-double avgCols(cv::Mat src, vector<int> upper, vector<int> bottom);
+float avgCols(cv::Mat src, vector<int> upper, vector<int> bottom);
 
 #endif //INC_3D_FINGER_VEIN_PREPROCESS_H

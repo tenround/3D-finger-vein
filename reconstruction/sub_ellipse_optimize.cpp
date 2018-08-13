@@ -111,8 +111,8 @@ vector<double> sub_ellipse_opt::solve_3(vector<double> x0, vector<double> x1)
     opt.add_inequality_constraint(fun_neq_constraint_2, NULL, 1e-2);
     opt.add_inequality_constraint(fun_neq_constraint_4, NULL, 1e-2);
     opt.add_inequality_constraint(fun_neq_constraint_6, NULL, 1e-2);
-    opt.set_xtol_rel(1e-8);
-    opt.set_maxeval(1000);
+    opt.set_xtol_rel(1e-4);
+    opt.set_maxeval(500);
 
 //    double minf_0, minf_1;
     vector<double> x(3);
@@ -142,8 +142,11 @@ vector<double> sub_ellipse_opt::solve_3(vector<double> x0, vector<double> x1)
         }
     }
     catch(exception &e) {
-        cout << "first ellipse nopt failed: " << e.what() << endl;
-        LOG(INFO) << "first ellipse nopt failed: " << e.what();
+        cout << "sub ellipse nlopt failed: " << e.what() << endl;
+        LOG(INFO) << "sub ellipse nolpt failed: " << e.what();
+        // 赋值为nan
+        minf_0 = 0.0/0.0;
+        minf_1 = 0.0/0.0;
     }
 
     return x;

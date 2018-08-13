@@ -26,41 +26,41 @@ using namespace std;
 class Finger_Reconstruct {
 public:
     // 变量
-    double L;
+    float L;
     Eigen::MatrixXf C1_M1, C1_M2, C2_M1, C2_M2, C3_M1, C3_M2;
     Eigen::MatrixXf C_M1, C1_M2_, C2_M2_, C3_M2_;
     Eigen::MatrixXf H1, H2, H3;
     Eigen::MatrixXf P1, P2, P3;
     Eigen::MatrixXf coor_c1, coor_c2, coor_c3;
 
-    double k1, k2, k3, k4, k5, k6;
-    double bias1, bias2, bias3, bias4, bias5, bias6;
+    float k1, k2, k3, k4, k5, k6;
+    float bias1, bias2, bias3, bias4, bias5, bias6;
 
     vector<MatrixXf> coor_c;
     vector<double> params;
 
-    vector<vector<double>> X_arr;
-    vector<double> z_arr;
+    vector<vector<float>> X_arr;
+    vector<float> z_arr;
 
-    vector<vector<double>> X_3D;
-    vector<vector<double>> Y_3D;
-    vector<vector<double>> Z_3D;
+    vector<vector<float>> X_3D;
+    vector<vector<float>> Y_3D;
+    vector<vector<float>> Z_3D;
 
     // 函数
     Finger_Reconstruct();       // 构造函数
     void set_cam_param();       // 设置3个相机的内外参以及其他参数
     void print_cam_param();     // 打印相机参数
     cv::Mat img_rectify(cv::Mat src, Eigen::MatrixXf H);    // 图像校正
-    void reconstruct(vector<vector<int>> edge_arr, double n_len);     // 三维重建
+    void reconstruct(vector<vector<int>> edge_arr, float n_len);     // 三维重建
     void calc_param(int I1_u, int I1_b, int I2_u, int I2_b, int I3_u, int I3_b);    // 计算坐标系以及约束线参数
-    void convert_3d_coor(double n);
+    void convert_3d_coor(float n);
 
 private:
     // global b c;
     // global init_center_x init_center_y init_radius;
-    double b, c;
-    double init_center_x, init_center_y, init_radius;
-    double poi_var;
+    float b, c;
+    float init_center_x, init_center_y, init_radius;
+    float poi_var;
 
 
 

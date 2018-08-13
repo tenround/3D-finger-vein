@@ -45,7 +45,7 @@ vector<vector<int>> find_all_edges(cv::Mat img_1, cv::Mat img_2, cv::Mat img_3)
 
     // 直接出来的边缘坐标数组长度是408，因为滤波时加上了边缘，现在再去掉那个边缘
     // int gau_win_width = 9;   // 取奇数
-    // min_x-floor((double)gau_win_width / 2) : max_x+floor((double)gau_win_width / 2)+1   左闭右开
+    // min_x-floor((float)gau_win_width / 2) : max_x+floor((float)gau_win_width / 2)+1   左闭右开
     vector<int> temp_u_1, temp_b_1;
     vector<int> temp_u_2, temp_b_2;
     vector<int> temp_u_3, temp_b_3;
@@ -74,9 +74,9 @@ vector<vector<int>> edge_detect(cv::Mat img, int min_x, int max_x, int image_ind
     // 先根据指定区域确定ROI
     // 边缘提取宽度为9.，所以这里先左右扩大4
     int gau_win_width = 9;   // 取奇数
-    cv::Mat sub_img = img.colRange(min_x-floor((double)gau_win_width / 2), max_x+floor((double)gau_win_width / 2)+1);
-//    cout << "min_x-floor((double)gau_win_width / 2): " << min_x-floor((double)gau_win_width / 2) << endl;
-//    cout << "max_x+floor((double)gau_win_width / 2): " << max_x+floor((double)gau_win_width / 2) << endl;
+    cv::Mat sub_img = img.colRange(min_x-floor((float)gau_win_width / 2), max_x+floor((float)gau_win_width / 2)+1);
+//    cout << "min_x-floor((float)gau_win_width / 2): " << min_x-floor((float)gau_win_width / 2) << endl;
+//    cout << "max_x+floor((float)gau_win_width / 2): " << max_x+floor((float)gau_win_width / 2) << endl;
     img = sub_img;
 
     cv::Mat kernel_up = (cv::Mat_<char>(3, 9) <<
@@ -152,7 +152,7 @@ vector<vector<int>> find_contours(cv::Mat edge_img)
     int rows = edge_img.rows;
     int cols = edge_img.cols;
     int mid = (int)floor(rows / 2);
-    int thre = 150;
+    int thre = 80;
     cv::Mat edge_img_roi_up, edge_img_roi_down;
     edge_img_roi_up = edge_img.rowRange(0, mid);
     edge_img_roi_down = edge_img.rowRange(mid, rows);
@@ -164,6 +164,8 @@ vector<vector<int>> find_contours(cv::Mat edge_img)
     // 检测上下边缘
     cv::threshold(edge_img_roi_up, dst_roi_up, thre, 255, THRESH_BINARY);
     cv::threshold(edge_img_roi_down, dst_roi_down, thre, 255, THRESH_BINARY);
+//    cv::Mat kernel = (cv::Mat_<float>(3, 3) << -1, -1, -1, 2, 5, 2, -1, -1, -1);
+//    cv::filter2D(edge_img_roi_down, edge_img_roi_down, edge_img_roi_down.type(), kernel);
 
 //    cv::imshow("threshold", dst_img);
 
@@ -364,7 +366,7 @@ int find_pts(vector<int> arr, int win_width)
 vector<int> erase_outlier(int u_idx, int win_width, vector<int> u_y)
 {
     int idx = ceil((float)win_width / 2);
-    double u_dif, u_predict;
+    float u_dif, u_predict;
     for(int i=u_idx-idx-1;i>=1;i--)
     {
         u_dif = 0;

@@ -39,9 +39,9 @@ vector<cv::Mat> adjust_brightness(cv::Mat img_1, cv::Mat img_2, cv::Mat img_3, v
     vector<int> u_3 = edge_arr[4];
     vector<int> b_3 = edge_arr[5];
 
-    double avgVal_1 = avgCols(img_1, u_1, b_1);
-    double avgVal_2 = avgCols(img_2, u_2, b_2);
-    double avgVal_3 = avgCols(img_3, u_3, b_3);
+    float avgVal_1 = avgCols(img_1, u_1, b_1);
+    float avgVal_2 = avgCols(img_2, u_2, b_2);
+    float avgVal_3 = avgCols(img_3, u_3, b_3);
 
     cv::Mat img_1_ad;
     img_1_ad.create(img_1.size(), img_1.type());
@@ -112,15 +112,15 @@ vector<cv::Mat> adjust_brightness(cv::Mat img_1, cv::Mat img_2, cv::Mat img_3, v
     return img_ad_list;
 }
 
-double avgCols(cv::Mat src, vector<int> upper, vector<int> bottom)
+float avgCols(cv::Mat src, vector<int> upper, vector<int> bottom)
 {
     int min_y = 91;
     int max_y = 490;
 
     int N_cols = max_y - min_y + 1;
 
-    double sumVal = 0;
-    double sumPix = 0;
+    float sumVal = 0;
+    float sumPix = 0;
     for(int i=0; i<N_cols; i++)
     {
         int upper_y = upper[i];
@@ -132,7 +132,7 @@ double avgCols(cv::Mat src, vector<int> upper, vector<int> bottom)
         sumPix = sumPix + bottom_y - upper_y + 1;
     }
 
-    double avgVal = sumVal / sumPix;
+    float avgVal = sumVal / sumPix;
 
     return avgVal;
 }

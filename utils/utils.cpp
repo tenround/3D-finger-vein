@@ -42,28 +42,28 @@ void init_log(char* argv[])
 
 
 // 在两个值之间做插值
-double poly_num(int iu, int il, int i, double lx, double ux)
+float poly_num(int iu, int il, int i, float lx, float ux)
 {
-    return lx * (double)(iu - i) / (double)(iu - il) + ux * (double)(i - il) / (double)(iu - il);
+    return lx * (float)(iu - i) / (float)(iu - il) + ux * (float)(i - il) / (float)(iu - il);
 }
 
 // 分段线性插值法
-vector<double> interp1_linear(vector<double> x1, vector<double> x2, vector<double> x2_dst)
+vector<float> interp1_linear(vector<float> x1, vector<float> x2, vector<float> x2_dst)
 {
     // x1与x2等长
     // x2_dst是x2的目标数组，输入
     // x1_dst是x1的目标数组，返回
     int x1_len = x1.size();
     int dst_len = x2_dst.size();
-    double interval;
-    vector<double> x1_dst(dst_len);
+    float interval;
+    vector<float> x1_dst(dst_len);
     vector<int> idx_list;
     int i, j=0;
     int iu, il, idx;
-    double lx, ux;
+    float lx, ux;
     for(i=0; i<dst_len;i++)
     {
-        if(x2_dst[i] == x2[j])
+        if(x2_dst[i] >= x2[j])
         {
             idx_list.push_back(i);
             j++;
@@ -89,13 +89,13 @@ vector<double> interp1_linear(vector<double> x1, vector<double> x2, vector<doubl
 
 void test_interp()
 {
-    vector<double> z;
-    vector<double> x;
-    vector<double> z_dst;
-    vector<double> x_dst;
+    vector<float> z;
+    vector<float> x;
+    vector<float> z_dst;
+    vector<float> x_dst;
     for(int i=1;i<=400;i++)
     {
-        z_dst.push_back((double)i);
+        z_dst.push_back((float)i);
     }
     for(int i=1;i<=400;i=i+20)
     {
@@ -114,4 +114,18 @@ long getCurrentTime()
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+}
+
+string strcat(string s1, string s2)
+{
+    stringstream ss;
+    ss << s1 << s2;
+    return ss.str();
+}
+
+string strcat(string s1, string s2, string s3)
+{
+    stringstream ss;
+    ss << s1 << s2 << s3;
+    return ss.str();
 }

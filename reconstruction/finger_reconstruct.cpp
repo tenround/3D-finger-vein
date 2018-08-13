@@ -39,7 +39,7 @@ void Finger_Reconstruct::set_cam_param()
              0, 0, 0, 1;
 
     Eigen::MatrixXf Rx, Ry, Rz;
-    double fai_x, fai_y, fai_z;
+    float fai_x, fai_y, fai_z;
 
     fai_x = pi / 60;
     // Rx = [1, 0, 0, 0; 0, cos(fai_x), sin(fai_x), 0; 0, -sin(fai_x), cos(fai_x), 0; 0, 0, 0, 1];
@@ -326,6 +326,38 @@ cv::Mat Finger_Reconstruct::img_rectify(cv::Mat src, Eigen::MatrixXf H)
     int cols = src.cols;    // 640
 
     // 计算一系列x、y、z，并求出起对应图像中的坐标
+//    Vector3f xyz;
+//    float x_temp, y_temp;
+//    vector<float> coor_x_list(rows * cols);
+//    vector<float> coor_y_list(rows * cols);
+//    Vector3f coor;
+//    for(int r=1; r<=rows; r++)
+//    {
+//        for(int c=1; c<=cols; c++)
+//        {
+//            x_temp = r;
+//            y_temp = c;
+//            xyz = Vector3f::Zero(3);
+//            xyz << y_temp, x_temp, 1;
+//            coor = H.inverse() * xyz;
+//            coor_x_list[(r-1) * cols + c - 1] = round(coor(0));
+//            coor_y_list[(r-1) * cols + c - 1] = round(coor(1));
+//        }
+//    }
+//
+//    cv::Mat dst(rows, cols, CV_8UC1, cv::Scalar(0));
+//    for(int r=1;r<=rows;r++)
+//    {
+//        for(int c=1;c<=cols;c++)
+//        {
+//            if(coor_x_list[(r-1) * cols + c - 1]>0 && coor_y_list[(r-1) * cols + c - 1]>0 &&
+//               coor_x_list[(r-1) * cols + c - 1] < 640 && coor_y_list[(r-1) * cols + c - 1] < 480)
+//            {
+//                dst.at<uchar>(r-1, c-1) = src.at<uchar>(coor_y_list[(r-1) * cols + c - 1], coor_x_list[(r-1) * cols + c - 1]);
+//            }
+//        }
+//    }
+
     Eigen::MatrixXf x = Eigen::MatrixXf::Zero(1, rows * cols);
     Eigen::MatrixXf y = Eigen::MatrixXf::Zero(1, rows * cols);
     for(int r=1;r<=rows;r++)
@@ -338,6 +370,7 @@ cv::Mat Finger_Reconstruct::img_rectify(cv::Mat src, Eigen::MatrixXf H)
 //            y(r-1, c-1) = c;
         }
     }
+
     Eigen::MatrixXf z = Eigen::MatrixXf::Ones(1, rows * cols);
     Eigen::MatrixXf xyz = Eigen::MatrixXf::Zero(3, rows * cols);
     xyz << y, x, z;
@@ -350,9 +383,6 @@ cv::Mat Finger_Reconstruct::img_rectify(cv::Mat src, Eigen::MatrixXf H)
             coor(i, j) = round(coor(i, j));
         }
     }
-//    cv::Mat dst;
-//    dst.create(cv::Size(cols, rows), CV_8UC1);
-//    dst = src.clone();
 
     cv::Mat dst(rows, cols, CV_8UC1, cv::Scalar(0));
     for(int r=1;r<=rows;r++)
@@ -360,7 +390,7 @@ cv::Mat Finger_Reconstruct::img_rectify(cv::Mat src, Eigen::MatrixXf H)
         for(int c=1;c<=cols;c++)
         {
             if(coor(0, (r-1) * cols + c - 1)>0 && coor(1, (r-1) * cols + c - 1)>0 &&
-                    coor(0, (r-1) * cols + c - 1) <= 640 && coor(1, (r-1) * cols + c - 1) <= 480)
+                    coor(0, (r-1) * cols + c - 1) < 640 && coor(1, (r-1) * cols + c - 1) < 480)
             {
                  dst.at<uchar>(r-1, c-1) = src.at<uchar>(coor(1, (r-1) * cols + c - 1), coor(0, (r-1) * cols + c - 1));
             }
@@ -370,7 +400,7 @@ cv::Mat Finger_Reconstruct::img_rectify(cv::Mat src, Eigen::MatrixXf H)
     return dst;
 }
 
-void Finger_Reconstruct::reconstruct(vector<vector<int>> edge_arr, double n_len)
+void Finger_Reconstruct::reconstruct(vector<vector<int>> edge_arr, float n_len)
 {
     int min_y = 91;
     int max_y = 490;
@@ -394,10 +424,10 @@ void Finger_Reconstruct::reconstruct(vector<vector<int>> edge_arr, double n_len)
     int I1_u, I1_b, I2_u, I2_b, I3_u, I3_b;
     vector<double> x(3);
     vector<double> last_x;
-    vector<double> rx_list, ry_list, diff_c_list;
-    double last_rx, last_ry;
-    vector<vector<double>> X;
-    vector<double> z;
+    vector<float> rx_list, ry_list, diff_c_list;
+    float last_rx, last_ry;
+    vector<vector<float>> X;
+    vector<float> z;
     coor_plot cp = coor_plot();
     for(int idx=0;idx<i_list.size();idx++)
     {
@@ -456,13 +486,13 @@ void Finger_Reconstruct::reconstruct(vector<vector<int>> edge_arr, double n_len)
             // 绘制初始椭圆
             if(disp_flag || save_flag)
             {
-//                vector<double> ellipse_params(5);
-//                ellipse_params[0] = x0[0];
-//                ellipse_params[1] = x0[1];
-//                ellipse_params[2] = x0[2];
-//                ellipse_params[3] = x0[3];
-//                ellipse_params[4] = x0[4];
-//                cp.plot_ellipse(ellipse_params);
+                vector<float> ellipse_params(5);
+                ellipse_params[0] = x0[0];
+                ellipse_params[1] = x0[1];
+                ellipse_params[2] = x0[2];
+                ellipse_params[3] = x0[3];
+                ellipse_params[4] = x0[4];
+                cp.plot_ellipse(ellipse_params);
             }
         }
         else {              // 之后锁定椭圆的b、c参数，求解剩余的参数
@@ -489,27 +519,34 @@ void Finger_Reconstruct::reconstruct(vector<vector<int>> edge_arr, double n_len)
             if(isnan(sub_ellipse_opt::minf_0) && isnan(sub_ellipse_opt::minf_1))
             {
 //                x = x0;
-                continue;
+                if(i == N_len-1)// 如果最后一个椭圆求解出错，就直接取前一个椭圆作为这个椭圆的值
+                    x = last_x;
+                else if(i < N_len-1)
+                {
+                    x = x0;
+                    continue;
+                }
+
             }
 
         }
 
-        double d = x[0], e = x[1], f = x[2];
-        double m = (b*d - c*e) / (-c*c + b);
-        double n = (e-c*d) / (-c*c + b);
+        float d = x[0], e = x[1], f = x[2];
+        float m = (b*d - c*e) / (-c*c + b);
+        float n = (e-c*d) / (-c*c + b);
         m=m/2; n = n/2;
-        double alpha = atan(2*c/(b-1)) / 2;
+        float alpha = atan(2*c/(b-1)) / 2;
         if (alpha>pi/4)
             alpha = pi/2 - alpha;
         else if (alpha < -pi/4)
             alpha = -pi/2 - alpha;
-        double aa = cos(alpha)*(cos(alpha) - c*sin(alpha)) - sin(alpha)*(c*cos(alpha) - b*sin(alpha));
-        double bb = cos(alpha)*(b*cos(alpha) + c*sin(alpha)) + sin(alpha)*(sin(alpha) + c*cos(alpha));
-        double ff = f + n*(b*n - e + c*m) + m*(m - d + c*n) - n*(c*cos(alpha) - b*sin(alpha)) - m*(cos(alpha) - c*sin(alpha)) - n*(b*cos(alpha) + c*sin(alpha)) - m*(sin(alpha) + c*cos(alpha));
-        double rx = sqrt(-ff/aa);
-        double ry = sqrt(-ff/bb);
-        double ecc = rx / ry;
-        double diff_c = (m - init_center_x)*(m - init_center_x) + (n - init_center_y)*(n - init_center_y);
+        float aa = cos(alpha)*(cos(alpha) - c*sin(alpha)) - sin(alpha)*(c*cos(alpha) - b*sin(alpha));
+        float bb = cos(alpha)*(b*cos(alpha) + c*sin(alpha)) + sin(alpha)*(sin(alpha) + c*cos(alpha));
+        float ff = f + n*(b*n - e + c*m) + m*(m - d + c*n) - n*(c*cos(alpha) - b*sin(alpha)) - m*(cos(alpha) - c*sin(alpha)) - n*(b*cos(alpha) + c*sin(alpha)) - m*(sin(alpha) + c*cos(alpha));
+        float rx = sqrt(-ff/aa);
+        float ry = sqrt(-ff/bb);
+        float ecc = rx / ry;
+        float diff_c = (m - init_center_x)*(m - init_center_x) + (n - init_center_y)*(n - init_center_y);
 
 //        cout << "m: " << m << endl;
 //        cout << "init_center_x: " << init_center_x << endl;
@@ -522,7 +559,7 @@ void Finger_Reconstruct::reconstruct(vector<vector<int>> edge_arr, double n_len)
         // 绘制椭圆
         if(disp_flag || save_flag)
         {
-            vector<double> ellipse_params(5);
+            vector<float> ellipse_params(5);
             ellipse_params[0] = b;
             ellipse_params[1] = c;
             ellipse_params[2] = x[0];
@@ -550,29 +587,37 @@ void Finger_Reconstruct::reconstruct(vector<vector<int>> edge_arr, double n_len)
             cp.close();
         }
 
-        X.push_back(x);
+        vector<float> x_res(3);
+        x_res[0] = x[0];
+        x_res[1] = x[1];
+        x_res[2] = x[2];
+        X.push_back(x_res);
 
         z.push_back(i + min_y);
     }
 
-    cout << "重建成功" << endl;
+//    cout << "重建成功" << endl;
 
     // 插值操作
-//    vector<double> z_arr;
-    vector<double> b_arr, c_arr;
-    vector<double> d_arr_src, e_arr_src, f_arr_src;
-    vector<double> d_arr, e_arr, f_arr;
-//    double n_len = 800;
-    double interp = (z[z.size()-1] - z[0] + 1) / (n_len );
-    for(double i=z[0];i<=z[z.size()-1];i+=interp)
+//    vector<float> z_arr;
+    vector<float> b_arr, c_arr;
+    vector<float> d_arr_src, e_arr_src, f_arr_src;
+    vector<float> d_arr, e_arr, f_arr;
+//    float n_len = 800;
+    float interp = N_len / (n_len - 1);
+    for(float i=z[0];i<z[z.size()-1];i+=interp)
     {
         z_arr.push_back(i);
         b_arr.push_back(b);
         c_arr.push_back(c);
     }
+    z_arr.push_back(z[z.size()-1]);
+    b_arr.push_back(b);
+    c_arr.push_back(c);
+    int len_z = z_arr.size();
     for(int i=0;i<X.size();i++)
     {
-        vector<double> temp = X[i];
+        vector<float> temp = X[i];
         d_arr_src.push_back(temp[0]);
         e_arr_src.push_back(temp[1]);
         f_arr_src.push_back(temp[2]);
@@ -581,7 +626,7 @@ void Finger_Reconstruct::reconstruct(vector<vector<int>> edge_arr, double n_len)
     e_arr = interp1_linear(e_arr_src, z, z_arr);
     f_arr = interp1_linear(f_arr_src, z, z_arr);
 
-//    vector<vector<double>> X_arr;
+//    vector<vector<float>> X_arr;
     X_arr.push_back(b_arr);
     X_arr.push_back(c_arr);
     X_arr.push_back(d_arr);
@@ -613,10 +658,10 @@ void Finger_Reconstruct::calc_param(int I1_u, int I1_b, int I2_u, int I2_b, int 
             1;
     Eigen::MatrixXf P = m1_2.inverse() * temp;
     // 1号相机
-    double x_c = coor_c1(0, 0);
-    double y_c = coor_c1(0, 1);
-    double x_u = P(0, 0);
-    double y_u = P(1, 0);
+    float x_c = coor_c1(0, 0);
+    float y_c = coor_c1(0, 1);
+    float x_u = P(0, 0);
+    float y_u = P(1, 0);
     k1 = (y_u - y_c) / (x_u - x_c);
     bias1 = y_c - k1 * x_c;
 //    Eigen::MatrixXf L1 = Eigen::MatrixXf::Zero(1, 3);
@@ -750,7 +795,7 @@ void Finger_Reconstruct::calc_param(int I1_u, int I1_b, int I2_u, int I2_b, int 
 //    d3 = d3.array().square();
 //    poi_var = (d1 + d2 + d3).sum();
 
-    double dist1, dist2, dist3, dist4, dist5, dist6;
+    float dist1, dist2, dist3, dist4, dist5, dist6;
 //    dist1 = (poi1(0, 0) - init_center_x) * (poi1(0, 0) - init_center_x) +
 //            (poi1(0, 1) - init_center_y) * (poi1(0, 1) - init_center_y);
 //    dist2 = (poi2(0, 0) - init_center_x) * (poi2(0, 0) - init_center_x) +
@@ -782,16 +827,16 @@ void Finger_Reconstruct::calc_param(int I1_u, int I1_b, int I2_u, int I2_b, int 
 //    dist5 = sqrt(dist5);
 //    dist6 = sqrt(dist6);
 
-    vector<double> dist_list;
+    vector<float> dist_list;
     dist_list.push_back(dist1);
     dist_list.push_back(dist2);
     dist_list.push_back(dist3);
     dist_list.push_back(dist4);
     dist_list.push_back(dist5);
     dist_list.push_back(dist6);
-    vector<double>::iterator p = min_element(dist_list.begin(), dist_list.end());
-//    vector<double>::iterator p = max_element(dist_list.begin(), dist_list.end());
-    init_radius = (*p) - 10;
+    vector<float>::iterator p = min_element(dist_list.begin(), dist_list.end());
+//    vector<float>::iterator p = max_element(dist_list.begin(), dist_list.end());
+    init_radius = (*p) - 20 - init_center_x*init_center_x - init_center_y*init_center_y;
 //    init_radius = (*p);
 //    cout << "init_radius: " << init_radius << endl;
 
@@ -827,30 +872,30 @@ void Finger_Reconstruct::calc_param(int I1_u, int I1_b, int I2_u, int I2_b, int 
 
 // input: X_arr, z_arr
 // output: X_3D, Y_3D, Z_3D
-void Finger_Reconstruct::convert_3d_coor(double n)
+void Finger_Reconstruct::convert_3d_coor(float n)
 {
-    vector<double> b_arr, c_arr, d_arr, e_arr, f_arr;
+    vector<float> b_arr, c_arr, d_arr, e_arr, f_arr;
     b_arr = X_arr[0];
     c_arr = X_arr[1];
     d_arr = X_arr[2];
     e_arr = X_arr[3];
     f_arr = X_arr[4];
 
-//    vector<vector<double>> X_3D;
-//    vector<vector<double>> Y_3D;
-//    vector<vector<double>> Z_3D;
+//    vector<vector<float>> X_3D;
+//    vector<vector<float>> Y_3D;
+//    vector<vector<float>> Z_3D;
 
     int arr_size = z_arr.size();
-    double b, c, d, e, f, z;
-    double alpha;  // 旋转角度
-    double x0, y0;
-    double aa, bb, ff, rx, ry;
+    float b, c, d, e, f, z;
+    float alpha;  // 旋转角度
+    float x0, y0;
+    float aa, bb, ff, rx, ry;
     Eigen::Matrix2f R;
-    double theta;
-//    double n = 50;
-    double step = (2*M_PI) / (n - 1);
-    double ellipse_x, ellipse_y;
-    vector<double> ellipse_x_list, ellipse_y_list, z_list;
+    float theta;
+//    float n = 50;
+    float step = (2*M_PI) / (n - 1);
+    float ellipse_x, ellipse_y;
+    vector<float> ellipse_x_list, ellipse_y_list, z_list;
     Eigen::Vector2f ellipse_xy;
     Eigen::Vector2f Rotation_ellipse;
     for(int i=0; i<arr_size; i++)

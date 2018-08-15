@@ -28,8 +28,8 @@ void main_reconstruct()
 //    test_interp();
     bool en_show = true;
     string dataset_path = "/home/xhb/xhb/DataSet/data/session1/src/";
-    int sub = 54;
-    int t = 13;
+    int sub = 1;
+    int t = 10;
     string img_name = gen_img_name(sub, t);
     //cout << img_name << endl;
     clock_t start, finish;
@@ -178,6 +178,7 @@ void main_reconstruct()
     // 绘制2维纹理图
 //    cv::Mat texture = map_texture::texture_img;
 //    cout << texture.size() << endl;
+//    cout << map_texture::x_3D.size() << ", " << map_texture::x_3D[0].size() << endl;
 //    cv::imshow("map texture", texture);
 //    cv::waitKey();
 
@@ -187,8 +188,8 @@ void main_reconstruct()
 
     start = clock();
     t1 = getCurrentTime();
-    map_texture::projection(180, 180);// 2度采样一个点
-//    map_texture::projection_2(180, 180);// 2度采样一个点
+//    map_texture::projection(180, 180);// 2度采样一个点
+    map_texture::projection_2(180, 180);// 2度采样一个点
     finish = clock();
     t2 = getCurrentTime();
     LOG(INFO) << "生成纹理图/深度图:" << (float)(finish - start) / CLOCKS_PER_SEC * 1000 << "ms" << "/" << (t2 - t1) << "ms";
@@ -285,8 +286,8 @@ void generate_one_map()
 
 void generate_maps()
 {
-    string dataset_path = "/home/xhb/xhb/DataSet/data/session1/src/";
-    for(int sub=1; sub<=204; sub++)
+    string dataset_path = "/home/xhb/xhb/DataSet/data/session2/src/";
+    for(int sub=1; sub<=203; sub++)
     {
         for(int t=1; t<=14; t++)
         {
@@ -339,7 +340,8 @@ void generate_maps()
             cout << "重建成功" << endl;
 
             // 纹理映射
-            map_texture::set_params(fc.coor_c, 520);
+//            map_texture::set_params(fc.coor_c, 520);
+            map_texture::set_params(fc.coor_c, 400);
             vector<MatrixXf> P_list(3);
             P_list[0] = fc.P1;
             P_list[1] = fc.P2;
@@ -352,8 +354,8 @@ void generate_maps()
             cout << "生成原始纹理映射图:" << strcat("./map_ori/", img_name) << endl;
 
             // 生成纹理图/深度图
-            map_texture::projection (180, 180);// 2度采样一个点
-//            map_texture::projection_2(180, 180);
+//            map_texture::projection (180, 180);// 2度采样一个点
+            map_texture::projection_2(180, 180);
 
             cv::Mat texture_prj = map_texture::texture_prj;
             cv::Mat depth_prj_img = map_texture::depth_prj_img;
@@ -381,11 +383,11 @@ int main(int argc,char* argv[]) {
     // 初始化glut库
     glutInit(&argc, argv);
 
-    main_reconstruct();
+//    main_reconstruct();
 
 //    generate_one_map();
 
-//    generate_maps();
+    generate_maps();
 
     return 0;
 }

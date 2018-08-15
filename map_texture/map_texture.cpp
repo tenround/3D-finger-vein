@@ -194,7 +194,7 @@ void map_texture::map_texture(vector<vector<float>> X_arr, vector<float> z_arr, 
         norm_p_contact_5 = inv_T * p_contact_5;
         norm_p_contact_6 = inv_T * p_contact_6;
 
-        float step = 2 * pi / (n_ellipse);
+        float step = 2 * pi / (n_ellipse + 1);
 
         // 计算切点对应的索引
         int edge_idx_1 = compute_edge_index(rx, ry, norm_p_contact_1, step);
@@ -1932,6 +1932,9 @@ void map_texture::projection_2(float n_theta, float n_len)
             z_src[i][j] = xyz_res(2);
         }
     }
+//    cout << x_src.size() << ", " << x_src[0].size() << endl;
+//    cout << x_3D.size() << ", " << x_3D[0].size() << endl;
+//    cout << map_texture::texture_3D.size() << map_texture::texture_3D[0].size() << endl;
     finish = clock();
     t2 = getCurrentTime();
 //    cout << "旋转所有的三维点云:" << (float)(finish - start) / CLOCKS_PER_SEC * 1000 << "ms" << "/" << (t2 - t1) << "ms" << endl;
@@ -1939,38 +1942,180 @@ void map_texture::projection_2(float n_theta, float n_len)
     // 3DFM标准化正常
 //    coor_plot_3d::plot_3d_finger_vein_model(x_src, y_src, z_src, map_texture::texture_3D);
 
-    // 求深度
-    // 由于xyz坐标已经是旋转后的3DFM了，其深度可以直接求每个点到[0; 0; 1]这个向量的距离，即只需要考虑x,y坐标即可。
-//    vector<vector<float> > depth_xy(x_src.size(), vector<float>(x_src[0].size(), 0));
-//    depth_xy.clear();
-//    for(size_t i=0; i<x_src.size(); i++)
-//    {
-//        for(size_t j=0; j<x_src[0].size(); j++) {
-//            float x = x_src[i][j];
-//            float y = y_src[i][j];
-//            depth_xy[i][j] = sqrt(x*x + y*y);
-//        }
-//    }
+    // 补充矫正操作，由于三维手指模型的中心线不一定能与z轴对齐，但是可以做到近似平行，所以直接将其平移到z轴上
+    // 考虑到重新求解中轴线需要遍历整个3D手指模型，计算量太大，直接等距离取5个椭圆的中心点，使用最小二乘法拟合出直线；
+    // 另外还有一种比较暴力的思路，就是直接取第一个和最后一个椭圆截面的中心点
+    int z_len = x_src.size();
+    int ellipse_len = x_src[0].size();
+    vector<size_t> i_list;
+    for(size_t i=0; i<z_len; i+=z_len/(5-1))
+    {
+        i_list.push_back(i);
+    }
+    i_list.push_back(z_len-1);
 
-    float x_src_size_0 = x_src.size();
-    float x_src_size_1 = x_src[0].size();
-    vector<vector<float> > depth_xy(x_src.size(), vector<float>(x_src[0].size()));
-    depth_xy.clear();
-    vector<float> temp_list;
+    vector<float> x_ellipse, y_ellipse, z_ellipse;
+    float x_ave=0, y_ave=0;
+    for(size_t idx=0; idx<i_list.size(); idx++)
+    {
+        size_t i = i_list[idx];
+
+        x_ellipse = x_src[i];
+        y_ellipse = y_src[i];
+        z_ellipse = z_src[i];
+
+        // 求出中心点的值
+        float x_sum = accumulate(x_ellipse.begin(), x_ellipse.end(), 0);
+        float y_sum = accumulate(y_ellipse.begin(), y_ellipse.end(), 0);
+//            float z_sum = accumulate(z_ellipse.begin(), z_ellipse.end(), 0);
+
+        x_sum /= x_ellipse.size();
+        y_sum /= y_ellipse.size();
+//            z_sum /= z_ellipse.size();
+
+        x_ave += x_sum;
+        y_ave += y_sum;
+    }
+    x_ave /= 5;
+    y_ave /= 5;
+
+    // 将所有的点都做平移，将(x_ave, y_ave)平移到(0, 0)
     for(size_t i=0; i<x_src.size(); i++)
     {
-        temp_list.clear();
-        for(size_t j=0; j<x_src[0].size(); j++) {
+        for(size_t j=0; j<x_src[0].size(); j++)
+        {
+            float x_temp = x_src[i][j];
+            float y_temp = y_src[i][j];
+//            float z_temp = z_src[i][j];
+            x_temp -= x_ave;
+            y_temp -= y_ave;
+            x_src[i][j] = x_temp;
+            y_src[i][j] = y_temp;
+        }
+    }
+
+    // 绘制3DFM模型
+//    coor_plot_3d::plot_3d_finger_vein_model(x_src, y_src, z_src, map_texture::texture_3D);
+
+    // 求深度步骤：
+    // 先遍历每个椭圆截面，求出椭圆上每个点到中心的均值，然后每个点的距离都减去这个均值
+    // 最后将所有椭圆的距离拼在一幅图上，对其整体作归一化，从所有值中找到最小值，减去最小值，再做归一化
+    vector<vector<float> > depth_xy;
+    float x_src_size_0 = x_src.size();
+    float x_src_size_1 = x_src[0].size();
+    float depth_sum;
+    vector<float> temp_depth_list;
+    // 遍历所有椭圆截面
+    for(size_t j=0; j<x_src[0].size(); j++)
+    {
+        depth_sum = 0;
+        temp_depth_list.clear();
+        for(size_t i=0; i<x_src.size(); i++)
+        {
             float x = x_src[i][j];
             float y = y_src[i][j];
             float depth = sqrt(x*x + y*y);
-//            depth_xy[i][j] = depth;
-            temp_list.push_back(depth);
+            depth_sum += depth;
+            temp_depth_list.push_back(depth);
         }
-        depth_xy.push_back(temp_list);
+        depth_sum /= x_src_size_0;
+
+        // 减去均值
+        for(size_t i=0; i<temp_depth_list.size(); i++)
+        {
+            float temp = temp_depth_list[i];
+            temp_depth_list[i] = (temp - depth_sum);
+        }
+
+//        vector<float>::iterator min_p = min_element(temp_depth_list.begin(), temp_depth_list.end());
+//        float min_row = (*min_p);
+//
+//        for(size_t i=0; i<temp_depth_list.size(); i++)
+//        {
+//            float temp = temp_depth_list[i];
+//            temp_depth_list[i] =  (temp - min_row);
+//        }
+
+        depth_xy.push_back(temp_depth_list);
     }
+
+    // 求深度
+    // 由于xyz坐标已经是旋转后的3DFM了，其深度可以直接求每个点到[0; 0; 1]这个向量的距离，即只需要考虑x,y坐标即可。
+
+//    vector<vector<float> > depth_xy(x_src.size(), vector<float>(x_src[0].size()));
+//    depth_xy.clear();
+//    vector<float> temp_list;
+//
+//    for(size_t j=0; j<x_src[0].size(); j++)
+//    {
+//        temp_list.clear();
+//        for(size_t i=0; i<x_src.size(); i++)
+//        {
+//            float x = x_src[i][j];
+//            float y = y_src[i][j];
+//            float depth = sqrt(x*x + y*y);
+////            depth_xy[i][j] = depth;
+//            temp_list.push_back(depth);
+//        }
+//        depth_xy.push_back(temp_list);
+//    }
 
     texture_prj = texture_img;
     depth_prj = depth_xy;
-    depth_prj_img = mat2gray(depth_prj);
+
+//    depth_prj_img = mat2gray(depth_xy);
+    mat2gray_2(depth_xy, depth_prj_img);
+}
+
+// matlab的mat2gray函数实现
+// 对浮点数矩阵做归一化，并转换为opencv的Mat类的实例
+// 注：这个函数与前面的mat2gray函数不一样，它会求出mat中的最大值与最小值并作归一化，而前面的mat2gray只是求出最大值，以0为最小值做最大最小归一化
+void map_texture::mat2gray_2(vector<vector<float>> mat, cv::Mat & gray)
+{
+    // 先找到其中的最大值和最小值
+    float max, min;
+    vector<float> mat_row;
+    vector<float>::iterator max_p, min_p;
+    float min_v;
+    for(int i=0; i<mat.size(); i++)
+    {
+        mat_row = mat[i];
+        max_p = max_element(mat_row.begin(), mat_row.end());
+        min_p = min_element(mat_row.begin(), mat_row.end());
+//        min_v = find_min_nonzero<float>(mat_row);
+        if(i == 0)
+        {
+            max = (*max_p);
+            min = (*min_p);
+//            min = min_v;
+        } else
+        {
+            if((*max_p) > max)
+                max = (*max_p);
+            if((*min_p) < min)
+                min = (*min_p);
+//            if(min_v < min)
+//                min = min_v;
+        }
+    }
+    // 考虑到部分图像展开后在边角处值为0，直接取最小值为0，后面再统一作归一化
+//    min = 0;
+
+    // 归一化
+//    float gray_min = 0.0;
+//    float gray_max = 1.0;
+//    cv::Mat gray;
+    gray.create(cv::Size(mat.size(), mat[0].size()), CV_32FC1);
+    for(int i=0; i<mat.size(); i++)
+    {
+        for(int j=0; j<mat[0].size(); j++)
+        {
+            float val = (mat[i][j] - min) / (max - min);
+            gray.at<float>(i, j) = val;
+        }
+    }
+
+    cout << gray.size() << endl;
+
+//    return gray;
 }

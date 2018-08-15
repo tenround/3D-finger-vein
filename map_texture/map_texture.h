@@ -59,6 +59,8 @@ namespace map_texture{
 
     template<class T>
     T find_min_nonzero(vector<T> & src);
+
+    void mat2gray_2(vector<vector<float>> mat, cv::Mat & gray);
 }
 
 
